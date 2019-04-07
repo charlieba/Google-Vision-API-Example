@@ -1,9 +1,12 @@
 {
   "expo": {
-    "name": "google-vision",
-    "slug": "google-vision-rn-demo",
+    "name": "Hubodometer",
+    "slug": "hubodometer-google-vision",
     "privacy": "public",
     "sdkVersion": "32.0.0",
+    "android":{
+      "package": "com.ai.hubodometer"
+    },
     "platforms": [
       "ios",
       "android"
@@ -23,7 +26,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ai.hubodometer"
     }
   }
 }
