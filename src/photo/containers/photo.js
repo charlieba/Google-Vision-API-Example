@@ -71,7 +71,7 @@ class Photo extends Component {
 
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists test (id_pic integer primary key not null, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized);'
+        'create table if not exists test (id_pic integer primary key not null, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized text);'
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
     });
@@ -137,7 +137,12 @@ class Photo extends Component {
                 <Text>{this.state.time}</Text>
                 <Text>LAT: {this.state.lat}</Text>
                 <Text>LONG: {this.state.long}</Text>
-              </View>
+                <Button
+                  onPress={this._pickImage}
+                  title="Elegir Imagen desde galeria"
+                />
+                <Button onPress={this._takePhoto} title="Finalizar viaje" />
+              </View>    
             )}
 						{this.state.confidence > this.state.confidence_min && this.state.googleResponse && (
               <View>
@@ -241,7 +246,7 @@ class Photo extends Component {
                 overflow: 'hidden'
               }}
             >
-              <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
+            <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
             </View>
             <Text
               onPress={this._copyToClipboard}
@@ -424,22 +429,22 @@ class Photo extends Component {
       console.log(this.state.Ubication);
       //=====================Ubication==================================
       //=====================Type=======================================
-      if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
-      {
-        this.state.type = 'end';
-      }
-      console.log(this.state.type)
+      // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
+      // {
+      //   this.state.type = 'end';
+      // }
+      // console.log(this.state.type)
       //=====================Type=======================================
     
         db.transaction(
           tx => {
-            tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [this.state.data_time, this.state.TruckPlate, this.state.TruckPlateOriginal, this.state.TruckPlateConfidence, this.state.TruckPlateUntrusted, this.state.Kilometers, this.state.KilometersOriginal, this.state.KilometersConfidence, this.state.KilometersUntrusted, this.state.Unit, this.state.Ubication, this.state.Type, this.state.Logo, this.state.addedByPhone, this.state.synchronized]);
+            tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)', [this.state.data_time, this.state.TruckPlate, this.state.TruckPlateOriginal, this.state.TruckPlateConfidence, this.state.TruckPlateUntrusted, this.state.Kilometers, this.state.KilometersOriginal, this.state.KilometersConfidence, this.state.KilometersUntrusted, this.state.Unit, this.state.Ubication, this.state.Type, this.state.Logo, this.state.addedByPhone, this.state.synchronized]);
             tx.executeSql('select * from test', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
-          null,
-          this.update
+         // null,
+         // this.update
         );
 		} catch (error) {
 			console.log(error);
