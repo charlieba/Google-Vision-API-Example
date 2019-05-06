@@ -51,8 +51,43 @@ class Photo extends Component {
     Logo: 'Logo',
     addedByPhone: 'False',
     synchronized: 'False',
-	};
+    showImage: true,
+    showData: false,
+    start: true,
+  };
 
+  baseState = {
+    date: '',
+    time: '',
+    data_time: '',
+    location: null,
+    errorMessage: null,
+    array: null,
+    TruckPlate:'',
+    TruckPlateOriginal: '',
+    TruckPlateConfidence: 0,
+    TruckPlateUntrusted: '',
+    Kilometers: '',
+    KilometersOriginal: '',
+    KilometersConfidence:'',
+    KilometersUntrusted: '',
+    Unit: 'KMS',
+    lat: '',
+    long: '',
+    Ubication: '',
+    Type: 'start',
+    Logo: 'Logo',
+    addedByPhone: 'False',
+    synchronized: 'False',
+    Kilo: '',
+    lati: '',
+    longi: '',
+    showImage: true,
+    showData: false,
+  };
+  
+  
+  
   componentWillMount() {
     if (Platform.OS === 'android' && !Constants.isDevice) {
       this.setState({
@@ -88,25 +123,41 @@ class Photo extends Component {
     let location = await Location.getCurrentPositionAsync({});
     this.setState({ location });
   };
-
+  
 
 	render() {
     let { image } = this.state;
     let text = 'Waiting..';
+    // let googleResponseV;
+    // let confidenceV;
+    let dateV;
+    let timeV;
+    let data_timeV;
+    let locationV;
+    let arrayV;
+    let TruckPlateV;
+    let TruckPlateOriginalV;
+    let TruckPlateConfidenceV;
+    let TruckPlateUntrustedV;
+    let KilometersV;
+    let KilometersOriginalV;
+    let KilometersConfidenceV;
+    let KilometersUntrustedV;
+    let UnitV;
+    let latV;
+    let longV;
+    let UbicationV;
+    let TypeV;
+    let LogoV;
+    let addedByPhoneV;
+    let synchronizedV;
 
     //=====================DATA_TIME====================
     var today = new Date();
     this.state.date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
     this.state.time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     //=====================DATA_TIME====================
-
-    if (this.state.errorMessage) {
-      text = this.state.errorMessage;
-    } else if (this.state.location) {
-      this.state.lat = JSON.stringify(this.state.location.coords.latitude);
-      this.state.long = JSON.stringify(this.state.location.coords.longitude);
-    }
-
+  
 		return (
       <View style={styles.container}>
 				<ScrollView
@@ -115,8 +166,8 @@ class Photo extends Component {
 				>
           <View style={styles.getStartedContainer}>
 						{image ? null : (
-							<Text style={styles.getStartedText}>Bienvenido!</Text>
-						)}       
+              <Text style={styles.getStartedText}>Bienvenido!</Text>
+            )}
         </View>
 
           <View style={styles.helpContainer}>
@@ -130,50 +181,26 @@ class Photo extends Component {
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-            {this.state.confidence > this.state.confidence_min && this.state.googleResponse && (  
-              <View>
-                <Text>Gracias los valores de tu viaje han sido almacenados</Text>
-                <Text>{this.state.date}</Text>
-                <Text>{this.state.time}</Text>
-                <Text>LAT: {this.state.lat}</Text>
-                <Text>LONG: {this.state.long}</Text>
-                <Button
-                  onPress={this._pickImage}
-                  title="Elegir Imagen desde galeria"
-                />
-                <Button onPress={this._takePhoto} title="Finalizar viaje" />
+
+            {this.state.confidence> this.state.confidence_min && this.state.googleResponse && this.state.showData == false &&(  
+              <View style={styles.getStartedContainer}>
+                <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
+                <Text>{this.baseState.Kilo} KMS</Text>
+                <Text>LAT: {this.baseState.lati} LONG: {this.baseState.longi}</Text>
+                <Button  
+                  onPress={this._changeData}
+                  title="Aceptar" />
               </View>    
-            )}
-						{this.state.confidence > this.state.confidence_min && this.state.googleResponse && (
-              <View>
-                <Text>{this.state.placa}</Text>
-                {/*<FlatList
-                    data={this.state.googleResponse.responses[0].textAnnotations}
-                    extraData={this.state}
-                    keyExtractor={this._keyExtractor}
-                    renderItem={
-                      ({ item }) =><Text>Item: {item.description}</Text>
-                    }
-                  />*/}
-              </View>
             )}
 						{this._maybeRenderImage()}
             {this._maybeRenderUploadingOverlay()}
-					</View>
+          </View>
         </ScrollView>
       </View>
     );
 	}
 
-	// organize = array => {
-	// 	return array.map(function(item, i) {
-	// 		return (
-	// 			<View key={i}>
-  //         <Text>{item}</Text>
-	// 			</View>
-	// 		);
-	// 	});
-	// };
+
 
 	_maybeRenderUploadingOverlay = () => {
 		if (this.state.uploading) {
@@ -209,6 +236,19 @@ class Photo extends Component {
 					elevation: 2
 				}}
       >
+      {this.state.showData == true && (  
+        <View style={styles.getStartedContainer}>
+          <Text style={styles.getStartedText}>Estos son los datos de tu Viaje</Text>
+          <Text>KMS: {this.baseState.Kilo} </Text>
+          <Text>LAT: {this.baseState.lati} </Text>
+          <Text>LONG: {this.baseState.longi}</Text>
+          <Button
+            onPress={this._pickImage}
+            title="Elegir Imagen desde galeria"
+          />
+          <Button onPress={this._takePhoto} title="Tomar Foto" />
+        </View>    
+      )}
       <View style={styles.getStartedContainer}>
 				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
           <View>
@@ -228,45 +268,31 @@ class Photo extends Component {
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
       </View>
+
+      {this.state.showImage == true && (  
+      <View
+        style={{
+          borderTopRightRadius: 3,
+          borderTopLeftRadius: 3,
+          shadowColor: 'rgba(0,0,0,1)',
+          shadowOpacity: 0.2,
+          shadowOffset: { width: 4, height: 4 },
+          shadowRadius: 5,
+          overflow: 'hidden'
+        }}
+      >
           
-          <Button
-              style={{ marginBottom: 10 }}
-              onPress={() => this.submitToGoogle()}
-              title="Guardar!"
-            />
+        <Button
+          style={{ marginBottom: 10 }}
+          onPress={() => this.submitToGoogle()}
+          title="Guardar!"
+        />
 
-            <View
-              style={{
-                borderTopRightRadius: 3,
-                borderTopLeftRadius: 3,
-                shadowColor: 'rgba(0,0,0,1)',
-                shadowOpacity: 0.2,
-                shadowOffset: { width: 4, height: 4 },
-                shadowRadius: 5,
-                overflow: 'hidden'
-              }}
-            >
-            <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
-            </View>
-            <Text
-              onPress={this._copyToClipboard}
-              onLongPress={this._share}
-              style={{ paddingVertical: 10, paddingHorizontal: 10 }}
-            />
-        
-        <Text>{this.state.placa}</Text>
-        <Text>{ this.state.confidence }</Text>
-				{/*<Text>Raw JSON:</Text>
+        <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
+            
 
-				{googleResponse && (
-					<Text
-						onPress={this._copyToClipboard}
-						onLongPress={this._share}
-						style={{ paddingVertical: 10, paddingHorizontal: 10 }}
-					>
-            {JSON.stringify(googleResponse.responses)}
-					</Text>
-        )}*/}
+      </View> )}
+
       </View>
       
 		);
@@ -324,7 +350,28 @@ class Photo extends Component {
 		} finally {
 			this.setState({ uploading: false });
 		}
-	};
+  };
+ 
+  //Cambia estado de contendor de image
+  _changeShow = () => {
+    this.setState({
+      showImage: !this.state.showImage
+    });
+  
+  }
+
+  //Cambia estado contenedor muestra datos del viaje
+  _changeData = () => {
+    if (this.state.start){
+      this.setState({
+        showData: !this.state.showData,
+        Type: 'end',
+        start: false
+      });
+    }else if(!this.state.start){
+      this.setState(this.baseState);
+    }
+  }
 
 	submitToGoogle = async () => {
 		try {
@@ -375,9 +422,23 @@ class Photo extends Component {
         array: responseJson.responses[0].textAnnotations,
       });
 
+      this._changeShow()
+      //=====================Coords================================
+      this._getLocationAsync()
+      if (this.state.errorMessage) {
+        text = this.state.errorMessage;
+      } else if (this.state.location) {
+        this.state.lat = JSON.stringify(this.state.location.coords.latitude);
+        this.baseState.lati = this.state.lat;
+        this.state.long = JSON.stringify(this.state.location.coords.longitude);
+        this.baseState.longi = this.state.lat;
+      }
+      //=====================Coords================================
+
       //=====================DATATIME================================
       this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
       console.log(this.state.data_time);
+      data_timeV = this.state.data_time;
       //=====================DATATIME================================
       //=====================TruckPlateOriginal======================
       let palabra = 'PLACA'
@@ -389,18 +450,22 @@ class Photo extends Component {
       var positionPlaca = arreglo.indexOf(palabra);
       this.state.TruckPlateOriginal = this.state.TruckPlateOriginal.concat(arreglo[positionPlaca + 1], arreglo[positionPlaca + 2], arreglo[positionPlaca + 3]); 
       console.log(this.state.TruckPlateOriginal);
+      TruckPlateOriginalV = this.state.TruckPlateOriginal;
       //=====================TruckPlateOriginal========================
       //=====================TruckPlate================================
       this.state.TruckPlate = this.state.TruckPlateOriginal;
+      TruckPlateV = this.state.TruckPlate;
       //=====================TruckPlate================================
 
       //=====================TruckPlateConfidence======================
       this.state.TruckPlateConfidence = this.state.confidence;
       console.log(this.state.confidence);
+      TruckPlateConfidenceV = this.state.TruckPlateConfidence;
       //=====================TruckPlateConfidence======================
       //=====================TruckPlateUntrusted=======================
       this.state.TruckPlateUntrusted = 'TRUE';
       console.log(this.state.TruckPlateUntrusted);
+      TruckPlateUntrustedV = this.state.TruckPlateUntrusted;
       //=====================TruckPlateUntrusted=======================
 
       //=====================KilometersOriginal========================
@@ -411,22 +476,33 @@ class Photo extends Component {
         this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, arreglo[j]);
       }
       console.log(this.state.KilometersOriginal);
+      KilometersOriginalV = this.state.KilometersOriginal;
+      this.baseState.Kilo = KilometersOriginalV;
       //=====================KilometersOriginal========================
       //=====================Kilometers================================
       this.state.Kilometers = this.state.KilometersOriginal;
       console.log(this.state.Kilometers);
+      KilometersV = this.state.Kilometers;
       //=====================Kilometers================================
       //=====================KilometersConfidence======================
       this.state.KilometersConfidence = this.state.confidence;
       console.log(this.state.KilometersConfidence);
+      KilometersConfidenceV = this.state.KilometersConfidence;
       //=====================KilometersConfidence======================
       //=====================KilometersUntrusted=======================
       this.state.KilometersUntrusted = 'TRUE';
       console.log(this.state.KilometersUntrusted);
+      KilometersUntrustedV = this.state.KilometersUntrusted;
       //=====================KilometersUntrusted=======================
+      //=====================Unit======================================
+      UnitV = this.state.Unit;
+      //=====================Unit======================================
       //=====================LOCATION==================================
       this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
       console.log(this.state.Ubication);
+      UbicationV = this.state.Ubication;
+      this.baseState.lati = this.state.lat;
+      this.baseState.longi = this.state.long;
       //=====================Ubication==================================
       //=====================Type=======================================
       // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
@@ -434,22 +510,35 @@ class Photo extends Component {
       //   this.state.type = 'end';
       // }
       // console.log(this.state.type)
+      TypeV = this.state.Type;
       //=====================Type=======================================
+      //=====================Logo=======================================
+      LogoV = this.state.Logo;
+      //=====================Logo=======================================
+      //=====================addedByPhone===============================
+      addedByPhoneV = this.state.addedByPhone;
+      //=====================addedByPhone===============================
+      //=====================synchronized===============================
+      synchronizedV = this.state.synchronized;
+      //=====================synchronized===============================
+
+      this.setState(this.baseState);
     
         db.transaction(
           tx => {
-            tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)', [this.state.data_time, this.state.TruckPlate, this.state.TruckPlateOriginal, this.state.TruckPlateConfidence, this.state.TruckPlateUntrusted, this.state.Kilometers, this.state.KilometersOriginal, this.state.KilometersConfidence, this.state.KilometersUntrusted, this.state.Unit, this.state.Ubication, this.state.Type, this.state.Logo, this.state.addedByPhone, this.state.synchronized]);
+            tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)', [data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV, synchronizedV]);
             tx.executeSql('select * from test', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
-         // null,
-         // this.update
         );
+        console.log(this.state);
+        console.log(this.baseState);
+        console.log(this.baseState.showImage);
 		} catch (error) {
 			console.log(error);
     }
-	};
+  };
 }
 
 async function uploadImageAsync(uri) {
