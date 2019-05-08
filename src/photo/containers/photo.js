@@ -256,7 +256,7 @@ class Photo extends Component {
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-          <Button onPress={this._takePhoto} title="Tomar Foto" />
+          <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
       <View style={styles.getStartedContainer}>
@@ -279,6 +279,7 @@ class Photo extends Component {
         )}
       </View>
 
+      {/* 
       {this.state.showImage == true && (  
       <View
         style={{
@@ -302,6 +303,7 @@ class Photo extends Component {
             
 
       </View> )}
+      */}
 
       </View>
       
@@ -334,7 +336,8 @@ class Photo extends Component {
 			aspect: [4, 3]
 		});
 
-		this._handleImagePicked(pickerResult);
+    this._handleImagePicked(pickerResult);
+    //this.submitToGoogle();
 	};
 
 	_pickImage = async () => {
@@ -343,7 +346,7 @@ class Photo extends Component {
 			aspect: [4, 3]
 		});
 
-		this._handleImagePicked(pickerResult);
+    this._handleImagePicked(pickerResult);
 	};
 
 	_handleImagePicked = async pickerResult => {
@@ -359,7 +362,9 @@ class Photo extends Component {
 			alert('Upload failed, sorry :(');
 		} finally {
 			this.setState({ uploading: false });
-		}
+    }
+    
+    this.submitToGoogle();
   };
  
   //Cambia estado de contendor de image
