@@ -259,7 +259,7 @@ class Photo extends Component {
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-          <Button onPress={this._takePhoto} title="Tomar Foto" />
+          <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
       <View style={styles.getStartedContainer}>
@@ -282,6 +282,7 @@ class Photo extends Component {
         )}
       </View>
 
+      {/* 
       {this.state.showImage == true && (  
       <View
         style={{
@@ -305,6 +306,7 @@ class Photo extends Component {
             
 
       </View> )}
+      */}
 
       </View>
       
@@ -332,12 +334,14 @@ class Photo extends Component {
 	};
 
 	_takePhoto = async () => {
+    subirafirebase = await uploadToDatabase("000001","000002");
 		let pickerResult = await ImagePicker.launchCameraAsync({
 			allowsEditing: true,
 			aspect: [4, 3]
 		});
 
-		this._handleImagePicked(pickerResult);
+    this._handleImagePicked(pickerResult);
+    //this.submitToGoogle();
 	};
 
 	_pickImage = async () => {
@@ -346,7 +350,7 @@ class Photo extends Component {
 			aspect: [4, 3]
 		});
 
-		this._handleImagePicked(pickerResult);
+    this._handleImagePicked(pickerResult);
 	};
 
 	_handleImagePicked = async pickerResult => {
@@ -354,7 +358,7 @@ class Photo extends Component {
 			this.setState({ uploading: true });
 
 			if (!pickerResult.cancelled) {
-				uploadUrl = await uploadImageAsync(pickerResult.uri);
+        uploadUrl = await uploadImageAsync(pickerResult.uri);
 				this.setState({ image: uploadUrl });
 			}
 		} catch (e) {
@@ -362,7 +366,9 @@ class Photo extends Component {
 			alert('Upload failed, sorry :(');
 		} finally {
 			this.setState({ uploading: false });
-		}
+    }
+    
+    this.submitToGoogle();
   };
  
   //Cambia estado de contendor de image
@@ -678,5 +684,21 @@ const styles = StyleSheet.create({
 		alignItems: 'center'
 	}
 });
+
+async function uploadToDatabase(kilometersStart,kilometersEnd) {
+      firebase.database().ref('Viajes/').push({
+        kilometersStart,
+        kilometersEnd
+    }).then((data)=>{
+        //success callback
+        console.log('data ' , data)
+        return data;
+    }).catch((error)=>{
+        //error callback
+        console.log('error ' , error)
+        return error;
+    })
+
+}
 
 export default Photo;
