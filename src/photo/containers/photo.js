@@ -331,6 +331,7 @@ class Photo extends Component {
 	};
 
 	_takePhoto = async () => {
+    subirafirebase = await uploadToDatabase("000001","000002");
 		let pickerResult = await ImagePicker.launchCameraAsync({
 			allowsEditing: true,
 			aspect: [4, 3]
@@ -354,7 +355,7 @@ class Photo extends Component {
 			this.setState({ uploading: true });
 
 			if (!pickerResult.cancelled) {
-				uploadUrl = await uploadImageAsync(pickerResult.uri);
+        uploadUrl = await uploadImageAsync(pickerResult.uri);
 				this.setState({ image: uploadUrl });
 			}
 		} catch (e) {
@@ -633,5 +634,21 @@ const styles = StyleSheet.create({
 		alignItems: 'center'
 	}
 });
+
+async function uploadToDatabase(kilometersStart,kilometersEnd) {
+      firebase.database().ref('Viajes/').push({
+        kilometersStart,
+        kilometersEnd
+    }).then((data)=>{
+        //success callback
+        console.log('data ' , data)
+        return data;
+    }).catch((error)=>{
+        //error callback
+        console.log('error ' , error)
+        return error;
+    })
+
+}
 
 export default Photo;
