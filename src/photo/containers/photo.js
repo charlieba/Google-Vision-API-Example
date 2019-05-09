@@ -21,7 +21,6 @@ import Environment from '../../../config/environment';
 const db = SQLite.openDatabase('db.db');
 
 
-
 class Photo extends Component {
 	state = {
 		image: null,
@@ -110,7 +109,7 @@ class Photo extends Component {
         'create table if not exists test (id_pic integer primary key not null, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized text);'
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
-    });
+    });    
   }
   
   _getLocationAsync = async () => {
@@ -187,11 +186,15 @@ class Photo extends Component {
                 title="Elegir Imagen desde galeria"
               />
             )}
-
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-
+            {(
+              <Button
+                onPress={this.submitToFirebase}
+                title="Sincronizar"
+              />
+            )}
             {this.state.confidence> this.state.confidence_min && this.state.googleResponse && this.state.showData == false &&(  
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
@@ -565,7 +568,54 @@ class Photo extends Component {
 			console.log(error);
     }
   };
+
+  submitToFirebase = async () => {
+    var database = firebase.database();
+
+    try {
+      db.transaction(tx => {
+        tx.executeSql('select * from test WHERE synchronized=?', ['False'], (_, { rows }) =>
+        {
+          
+          for(x=0;x<rows.length;x++)  {
+            let ele = rows._array[x];
+            database.ref('/Trip').push({
+              DateTime:ele.DataTime,
+              Kilometers:ele.Kilometers,
+              KilometersConfidence:ele.KilometersConfidence,
+              KilometersOriginal:ele.KilometersOriginal,
+              KilometersUntrusted:ele.KilometersUntrusted,
+              Location:ele.Location,
+              Logo:ele.Logo,
+              PicURL:'',
+              TruckPlate:ele.TruckPlate,
+              TruckPlateConfidence:ele.TruckPlateConfidence,
+              TruckPlateOriginal:ele.TruckPlateOriginal,
+              TruckPlateUntrusted:ele.TruckPlateUntrusted,
+              Type:ele.Type,
+              Unit:ele.Unit,
+              addedByPhone:ele.addedByPhone
+            }).then((data)=>{
+                
+                db.transaction(function (tx2) {
+                  tx2.executeSql('update test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
+                    });
+                  });
+            }).catch((error)=>{
+                //error callback
+                console.log('error ' , error)
+            })
+          }
+        }
+        );
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
+
+
 
 async function uploadImageAsync(uri) {
 	const blob = await new Promise((resolve, reject) => {
