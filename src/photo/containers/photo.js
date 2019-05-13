@@ -27,7 +27,7 @@ class Photo extends Component {
 		uploading: false,
     googleResponse: null,
     confidence: 0,
-    confidence_min: 0.80,
+    confidence_min: 0.50,
     date: '',
     time: '',
     data_time: '',
@@ -409,16 +409,16 @@ class Photo extends Component {
 				requests: [
 					{
 						features: [
-							{ type: 'LABEL_DETECTION', maxResults: 10 },
-							{ type: 'LANDMARK_DETECTION', maxResults: 5 },
-							{ type: 'FACE_DETECTION', maxResults: 5 },
-							{ type: 'LOGO_DETECTION', maxResults: 5 },
-							{ type: 'TEXT_DETECTION', maxResults: 5 },
-							{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 5 },
-							{ type: 'SAFE_SEARCH_DETECTION', maxResults: 5 },
-							{ type: 'IMAGE_PROPERTIES', maxResults: 5 },
-							{ type: 'CROP_HINTS', maxResults: 5 },
-							{ type: 'WEB_DETECTION', maxResults: 5 }
+							// { type: 'LABEL_DETECTION', maxResults: 10 },
+							// { type: 'LANDMARK_DETECTION', maxResults: 5 },
+							// { type: 'FACE_DETECTION', maxResults: 5 },
+							// { type: 'LOGO_DETECTION', maxResults: 5 },
+							// { type: 'TEXT_DETECTION', maxResults: 5 },
+							{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 10 },
+							// { type: 'SAFE_SEARCH_DETECTION', maxResults: 5 },
+							// { type: 'IMAGE_PROPERTIES', maxResults: 5 },
+							// { type: 'CROP_HINTS', maxResults: 5 },
+							// { type: 'WEB_DETECTION', maxResults: 5 }
 						],
 						image: {
 							source: {
@@ -451,7 +451,7 @@ class Photo extends Component {
       });
 
       this._changeShow()
-
+      //console.log(this.state.googleResponse);
       //=====================Confidence============================
       ConfidenceV = this.state.confidence;
       //=====================Confidence============================
@@ -506,11 +506,21 @@ class Photo extends Component {
       var foo = '';
       for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
       {
-        this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, arreglo[j]);
+        var num = arreglo[j];
+        parseInt(num);
+        var digito;
+        console.log(num);
+        if (/^([0-100])*$/.test(num))
+        {
+          digito = num;
+        }else{
+          digito = arreglo[j];
+        }
+          this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, digito);
+          console.log(this.state.KilometersOriginal);
+          KilometersOriginalV = this.state.KilometersOriginal;
+          this.baseState.Kilo = KilometersOriginalV;
       }
-      console.log(this.state.KilometersOriginal);
-      KilometersOriginalV = this.state.KilometersOriginal;
-      this.baseState.Kilo = KilometersOriginalV;
       //=====================KilometersOriginal========================
       //=====================Kilometers================================
       this.state.Kilometers = this.state.KilometersOriginal;
@@ -566,6 +576,8 @@ class Photo extends Component {
             );
           },
         );
+        subirafirebase = await uploadToDatabase(data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
+          );
         // console.log(this.state);
         // console.log(this.baseState);
         // console.log(this.baseState.showImage);
@@ -606,7 +618,7 @@ class Photo extends Component {
                 db.transaction(function (tx2) {
                   tx2.executeSql('update test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
                     });
-                  });
+                });
             }).catch((error)=>{
                 //error callback
                 console.log('error ' , error)
@@ -685,10 +697,37 @@ const styles = StyleSheet.create({
 	}
 });
 
-async function uploadToDatabase(kilometersStart,kilometersEnd) {
+async function uploadToDatabase(
+  DataTime,
+  TruckPlate,
+  TruckPlateOriginal,
+  TruckPlateConfidence,
+  TruckPlateUntrusted,
+  Kilometers,
+  KilometersOriginal,
+  KilometersConfidence,
+  KilometersUntrusted,
+  Unit,
+  Location,
+  Type,
+  Logo,
+  addedByPhone,
+  ) {
       firebase.database().ref('Viajes/').push({
-        kilometersStart,
-        kilometersEnd
+        DataTime,
+        TruckPlate,
+        TruckPlateOriginal,
+        TruckPlateConfidence,
+        TruckPlateUntrusted,
+        Kilometers,
+        KilometersOriginal,
+        KilometersConfidence,
+        KilometersUntrusted,
+        Unit,
+        Location,
+        Type,
+        Logo,
+        addedByPhone,
     }).then((data)=>{
         //success callback
         console.log('data ' , data)
