@@ -27,7 +27,7 @@ class Photo extends Component {
 		uploading: false,
     googleResponse: null,
     confidence: 0,
-    confidence_min: 0.50,
+    confidence_min: 0.60,
     date: '',
     time: '',
     data_time: '',
@@ -53,6 +53,7 @@ class Photo extends Component {
     showImage: true,
     showData: false,
     start: true,
+    repeat: 0,
   };
 
   baseState = {
@@ -74,7 +75,7 @@ class Photo extends Component {
     lat: '',
     long: '',
     Ubication: '',
-    Type: 'start',
+    //Type: 'start',
     Logo: 'Logo',
     addedByPhone: 'False',
     synchronized: 'False',
@@ -160,6 +161,7 @@ class Photo extends Component {
     let LogoV;
     let addedByPhoneV;
     let synchronizedV;
+    let repeatV;
 
     //=====================DATA_TIME====================
     var today = new Date();
@@ -172,30 +174,32 @@ class Photo extends Component {
 				<ScrollView
 					style={styles.container}
 					contentContainerStyle={styles.contentContainer}
-				>
-          <View style={styles.getStartedContainer}>
-						{image ? null : (
-              <Text style={styles.getStartedText}>Bienvenido!</Text>
-            )}
-        </View>
-
+        >
           <View style={styles.helpContainer}>
-            {image ? null : (
+            <View style={styles.getStartedContainer}>
+              {image ? null : (
+                <Text style={styles.getStartedText}>Bienvenido!</Text>
+              )}
+            </View>
+
+          
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-            {(
+            {/*(
               <Button
                 onPress={this.submitToFirebase}
                 title="Sincronizar"
               />
-            )}
-            {this.state.confidence> this.state.confidence_min && this.state.googleResponse && this.state.showData == false &&(  
+            )*/}
+            {/*{this.state.confidence> this.state.confidence_min && this.state.googleResponse && this.state.showData == false &&(*/}
+              {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
                 <Text>{this.baseState.Kilo} KMS</Text>
@@ -255,29 +259,29 @@ class Photo extends Component {
           <Text>KMS: {this.baseState.Kilo} </Text>
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
-          <Button
+          {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-          />
+          />*/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
       <View style={styles.getStartedContainer}>
-				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
+				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min &&  this.state.repeat == 1 && (
           <View>
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, Puedes tomar nuevamente la foto?</Text>
           </View>
         )}
         
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min &&(
-          <Button
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+          {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-          />
+          />*/}
         )}
 
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
       </View>
@@ -334,7 +338,7 @@ class Photo extends Component {
 	};
 
 	_takePhoto = async () => {
-    subirafirebase = await uploadToDatabase("000001","000002");
+    //subirafirebase = await uploadToDatabase("000001","000002");
 		let pickerResult = await ImagePicker.launchCameraAsync({
 			allowsEditing: true,
 			aspect: [4, 3]
@@ -403,7 +407,7 @@ class Photo extends Component {
 
 	submitToGoogle = async () => {
 		try {
-			this.setState({ uploading: true });
+			this.setState({ uploading: true,});
 			let { image } = this.state;
 			let body = JSON.stringify({
 				requests: [
@@ -564,10 +568,19 @@ class Photo extends Component {
       //=====================synchronized===============================
       synchronizedV = this.state.synchronized;
       //=====================synchronized===============================
+      if (this.state.confidence < this.state.confidence_min){
+        if(this.state.repeat == 0){
+          this.setState({ repeat: 1,});
+          repeatV = this.state.repeat;
+        }else if(this.state.repeat == 1){
+          this.setState({ repeat: 2,});
+          repeatV = this.state.repeat;
+        } 
+      }
 
       this.setState(this.baseState);
 
-      if(ConfidenceV > this.state.confidence_min){
+      if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
         db.transaction(
           tx => {
             tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)', [data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV, synchronizedV]);
@@ -578,6 +591,8 @@ class Photo extends Component {
         );
         subirafirebase = await uploadToDatabase(data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
           );
+        this.setState({ repeat: 0,});
+        this.setState({ Type: 'start',});
         // console.log(this.state);
         // console.log(this.baseState);
         // console.log(this.baseState.showImage);
