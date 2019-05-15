@@ -178,27 +178,12 @@ class Photo extends Component {
           <View style={styles.helpContainer}>
             <View style={styles.getStartedContainer}>
               {image ? null : (
-                <Text style={styles.getStartedText}>Bienvenido!</Text>
+                <Text style={styles.getStartedText}>Bienvenido</Text>
               )}
             </View>
-
-          
-            {/*image ? null : (
-              <Button
-                onPress={this._pickImage}
-                title="Elegir Imagen desde galeria"
-              />
-            )*/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-            {/*(
-              <Button
-                onPress={this.submitToFirebase}
-                title="Sincronizar"
-              />
-            )*/}
-            {/*{this.state.confidence> this.state.confidence_min && this.state.googleResponse && this.state.showData == false &&(*/}
               {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
@@ -245,72 +230,29 @@ class Photo extends Component {
 		}
 
 		return (
-			<View
-				style={{
-					marginTop: 20,
-					width: 250,
-					borderRadius: 3,
-					elevation: 2
-				}}
-      >
+			<View style={styles.container}>
       {this.state.showData == true && this.state.start == false && (  
         <View style={styles.getStartedContainer}>
           <Text style={styles.getStartedText}>Estos son los datos de tu Viaje</Text>
           <Text>KMS: {this.baseState.Kilo} </Text>
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
-          {/*<Button
-            onPress={this._pickImage}
-            title="Elegir Imagen desde galeria"
-          />*/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
       <View style={styles.getStartedContainer}>
-				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min &&  this.state.repeat == 1 && (
+				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
           <View>
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
-            <Text>Creemos que los datos no son correctos, Puedes tomar nuevamente la foto?</Text>
+            <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
           </View>
         )}
         
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
-          {/*<Button
-            onPress={this._pickImage}
-            title="Elegir Imagen desde galeria"
-          />*/}
-        )}
 
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
       </View>
-
-      {/* 
-      {this.state.showImage == true && (  
-      <View
-        style={{
-          borderTopRightRadius: 3,
-          borderTopLeftRadius: 3,
-          shadowColor: 'rgba(0,0,0,1)',
-          shadowOpacity: 0.2,
-          shadowOffset: { width: 4, height: 4 },
-          shadowRadius: 5,
-          overflow: 'hidden'
-        }}
-      >
-          
-        <Button
-          style={{ marginBottom: 10 }}
-          onPress={() => this.submitToGoogle()}
-          title="Guardar!"
-        />
-
-        <Image source={{ uri: image }} style={{ width: 250, height: 250 }} />
-            
-
-      </View> )}
-      */}
 
       </View>
       
@@ -452,6 +394,8 @@ class Photo extends Component {
         uploading: false,
         confidence: responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence,
         array: responseJson.responses[0].textAnnotations,
+        kilometersbegin: 0,
+        kilometersend: 0
       });
 
       this._changeShow()
@@ -480,6 +424,34 @@ class Photo extends Component {
       //=====================TruckPlateOriginal======================
       let palabra = 'PLACA'
       var arreglo = [];
+      var text = this.state.array[0]["description"];
+      console.log("texto sin modificar: "+text);
+      text=text.toLowerCase();
+      text=text.replace(/ /g,"");
+      text=text.replace(/paraestarseguro/g,"");
+      text=text.replace(/...paraestarseguro/g,"");
+      text=text.replace(/paraestarseg0r0/g,"");
+      text=text.replace(/...paraestarseg0r0/g,"");
+      text=text.replace(/\./g,"");
+      text=text.replace(/,/g,"");
+      text=text.replace(/ /g,'');
+      text=text.replace(/\\/g,"");
+      text=text.replace(/\n/g,",");
+      text=text.replace(/o/g,"0");
+      text=text.replace(/u/g,"0");
+
+
+      var text = text.substring(
+        text.lastIndexOf("placa") + 5, 
+        text.lastIndexOf(",kms")
+      );
+      text=text.replace(/,,/g,",");
+      textPlateAndKms = text.split(",");
+        
+
+      console.log("texto modificado: "+text);
+      
+      
       for (let i =0; i < this.state.array.length; i++ ){
         arreglo.push(this.state.array[i].description);
       }
@@ -508,7 +480,40 @@ class Photo extends Component {
       //=====================KilometersOriginal========================
       //this.state.kms = arreglo[positionPlaca + 4]; 
       var foo = '';
-      for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
+      KilometersOriginalV = 0;
+      if(textPlateAndKms[1] === 'undefined' || textPlateAndKms[1] === undefined) {
+        this.baseState.Kilo = 0;
+        this.state.confidence = 0.10;
+      }else{
+        KilometersOriginalV = textPlateAndKms[1];
+        KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
+        KilometersOriginalV=KilometersOriginalV.replace(/e/g,'3');
+        KilometersOriginalV=KilometersOriginalV.replace(/t/g,'7');
+        KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
+        KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
+        KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
+        if (typeof num1 != 'number'){
+          this.state.confidence = 0.10;
+        }else if(isNaN(KilometersOriginalV)){
+          this.state.confidence = 0.10;
+        }else if(parseInt(KilometersOriginalV) > 0){
+          KilometersOriginalV = parseInt(KilometersOriginalV);
+        }else{
+          this.state.confidence = 0.10;
+        }
+        
+          if(this.state.start){
+            this.state.kilometersbegin = KilometersOriginalV
+          }else {
+            this.state.kilometersend = KilometersOriginalV
+          }
+        this.baseState.Kilo = KilometersOriginalV;
+      }
+      
+
+
+
+      /*for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
       {
         var num = arreglo[j];
         parseInt(num);
@@ -524,7 +529,7 @@ class Photo extends Component {
           console.log(this.state.KilometersOriginal);
           KilometersOriginalV = this.state.KilometersOriginal;
           this.baseState.Kilo = KilometersOriginalV;
-      }
+      }*/
       //=====================KilometersOriginal========================
       //=====================Kilometers================================
       this.state.Kilometers = this.state.KilometersOriginal;
