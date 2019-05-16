@@ -26,8 +26,9 @@ class Photo extends Component {
 		image: null,
 		uploading: false,
     googleResponse: null,
+    TripCode:0,
     confidence: 0,
-    confidence_min: 0.60,
+    confidence_min: 0.70,
     date: '',
     time: '',
     data_time: '',
@@ -111,7 +112,7 @@ class Photo extends Component {
 
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists test (id_pic integer primary key not null, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized text);'
+        'create table if not exists testf (id_pic integer primary key not null, TripCode text, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized text);'
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
     });    
@@ -143,6 +144,7 @@ class Photo extends Component {
     }
     // let googleResponseV;
     // let confidenceV;
+    let TripCodeV
     let dateV;
     let timeV;
     let data_timeV;
@@ -203,7 +205,7 @@ class Photo extends Component {
                   <Text>{this.baseState.Kilo} KMS</Text>
                 )}
                 {!this.state.start &&(     
-                  <Text>Total {this.baseState.startKilometer - this.baseState.endKilometer} KMS</Text>
+                  <Text>Total { this.baseState.endKilometer - this.baseState.startKilometer } KMS</Text>
                 )}
                 <Text>LAT: {this.baseState.lati} LONG: {this.baseState.longi}</Text>
                 <Button  
@@ -264,7 +266,7 @@ class Photo extends Component {
         </View>    
       )}
       <View style={styles.getStartedContainer}>
-				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
+				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <View>
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
@@ -278,7 +280,7 @@ class Photo extends Component {
           />
         )*/}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
       </View>
@@ -381,6 +383,13 @@ class Photo extends Component {
     }
   }
 
+   _tripCode = (min, max) => {       
+      var numPosibilidades = max - min 
+      var aleat = Math.random() * numPosibilidades 
+      aleat = Math.round(aleat) 
+      return parseInt(min) + aleat
+    }
+
 	submitToGoogle = async () => {
 		try {
 			this.setState({ uploading: true,});
@@ -434,10 +443,24 @@ class Photo extends Component {
 
       this._changeShow()
       //console.log(this.state.googleResponse);
+      //=====================TripCode=+++==========================
+      if(this.state.start){
+        console.log('Numero aleatorio');
+        var max = Math.round((new Date()));
+        var min = Math.round((new Date()).getTime() / 1000);
+        // console.log(max);
+        // console.log(min);
+        //console.log(this._tripCode(max, min));
+        var code = this._tripCode(max, min)
+        this.setState({ TripCode: code,});
+        console.log(this.state.TripCode);
+        console.log('Numero aleatorio');
+      }
+      TripCodeV = this.state.TripCode;
+      //=====================TripCode=+++==========================
       //=====================Confidence============================
       ConfidenceV = this.state.confidence;
       //=====================Confidence============================
-
       //=====================Coords================================
       this._getLocationAsync()
       if (this.state.errorMessage) {
@@ -627,17 +650,16 @@ class Photo extends Component {
       }
 
       this.setState(this.baseState);
-
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
         db.transaction(
           tx => {
-            tx.executeSql('insert into test (DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)', [data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV, synchronizedV]);
-            tx.executeSql('select * from test', [], (_, { rows }) =>
+            tx.executeSql('insert into testf (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV, synchronizedV]);
+            tx.executeSql('select * from testf', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
         );
-        subirafirebase = await uploadToDatabase(data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
+        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
           );
         this.setState({ repeat: 0,});
         // if(TypeV == 'end'){
@@ -764,6 +786,7 @@ const styles = StyleSheet.create({
 });
 
 async function uploadToDatabase(
+  TripCode,
   DataTime,
   TruckPlate,
   TruckPlateOriginal,
@@ -780,6 +803,7 @@ async function uploadToDatabase(
   addedByPhone,
   ) {
       firebase.database().ref('Viajes/').push({
+        TripCode,
         DataTime,
         TruckPlate,
         TruckPlateOriginal,
