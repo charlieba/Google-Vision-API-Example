@@ -5468,6 +5468,11 @@ react-native-background-fetch@^2.5.6:
     plist "^3.0.1"
     xcode "^2.0.0"
 
+react-native-background-job@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-background-job/-/react-native-background-job-2.2.0.tgz#539b6416303bd06593e8a12fe43c6fe0b198eea8"
+  integrity sha512-nn4lZWm0pX0Ank8AUnP2qONgV34UStam/TKOZiEU84NkNahW2ZTOQVw0yF1iUN3ZCkLpsofLNilwePrIVf35+w==
+
 react-native-background-task@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/react-native-background-task/-/react-native-background-task-0.2.1.tgz#9d110ed14b245e0d8b9ec8114ce24b33ddda65de"

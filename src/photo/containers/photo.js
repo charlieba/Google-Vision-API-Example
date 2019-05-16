@@ -111,13 +111,13 @@ class Photo extends Component {
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
     });   
-    
+    /*
     this.interval = setInterval(
       () => {
         subirafirebase = submitToFirebase();
       },
       40000
-    );
+    );*/
   }
   
   _getLocationAsync = async () => {

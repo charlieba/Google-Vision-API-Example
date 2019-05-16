@@ -8,10 +8,12 @@
   },
   "dependencies": {
     "expo": "^32.0.0",
+    "expokit": "^32.1.2",
     "firebase": "^5.9.2",
     "react": "16.5.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
     "react-native-background-fetch": "^2.5.6",
+    "react-native-background-job": "^2.2.0",
     "react-native-background-task": "^0.2.1",
     "react-native-queue": "^1.2.1",
     "uuid": "^3.3.2"
