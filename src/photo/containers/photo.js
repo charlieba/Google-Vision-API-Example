@@ -54,6 +54,8 @@ class Photo extends Component {
     showData: false,
     start: true,
     repeat: 0,
+    startKilometer: 0,
+    endKilometer: 0,
   };
 
   baseState = {
@@ -84,6 +86,8 @@ class Photo extends Component {
     longi: '',
     showImage: true,
     showData: false,
+    startKilometer: 0,
+    endKilometer: 0,
     //start: true,
   };
   
@@ -188,13 +192,26 @@ class Photo extends Component {
                 <Text style={styles.getStartedText}>Bienvenido</Text>
               )}
             </View>
+            {/*************Borrar despues******************/}
+            {/*image ? null : (
+              <Button
+                onPress={this._pickImage}
+                title="Elegir Imagen desde galeria"
+              />
+            )*/}
+             {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._pickImage} title="Iniciar viaje" />
             )}
               {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
-                <Text>{this.baseState.Kilo} KMS</Text>
+                {this.state.start &&( 
+                  <Text>{this.baseState.Kilo} KMS</Text>
+                )}
+                {!this.state.start &&(     
+                  <Text>Total {this.baseState.startKilometer - this.baseState.endKilometer} KMS</Text>
+                )}
                 <Text>LAT: {this.baseState.lati} LONG: {this.baseState.longi}</Text>
                 <Button  
                   onPress={this._changeData}
@@ -244,7 +261,13 @@ class Photo extends Component {
           <Text>KMS: {this.baseState.Kilo} </Text>
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
-          <Button onPress={this._pickImage} title="Finalizar Viaje" />
+          {/*************Borrar despues******************/}
+           {/*<Button
+            onPress={this._pickImage}
+            title="Elegir Imagen desde galeria"
+           />*/}
+          {/*************Borrar despues******************/}
+          <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
       <View style={styles.getStartedContainer}>
@@ -254,8 +277,14 @@ class Photo extends Component {
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
           </View>
         )}
-        
-
+        {/*************Borrar despues******************/}
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+          <Button
+            onPress={this._pickImage}
+            title="Elegir Imagen desde galeria"
+          />
+        )*/}
+        {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && (
           <Button onPress={this._pickImage} title="Tomar Foto" />
         )}
@@ -338,9 +367,12 @@ class Photo extends Component {
       this.setState({
         showData: !this.state.showData,
         Type: 'end',
-        start: false
+        start: false,
+        //startKilometer: KilometersOriginalV
       });
+      //this.baseState.startKilometer = this.state.startKilometer; 
       console.log('final')
+      //console.log(this.baseState.startKilometer);
     }else if(!this.state.start){
       this.setState(this.baseState);
       this.setState({ 
@@ -348,9 +380,11 @@ class Photo extends Component {
         uploading: false,
         googleResponse: null, 
         start: true,
+       // endKilometer: KilometersOriginalV
       });
-      
+      //this.baseState.endKilometer = this.state.endKilometer; 
       console.log('inicio')
+      //console.log(this.baseState.startKilometer);
     }
   }
 
@@ -490,7 +524,8 @@ class Photo extends Component {
       KilometersOriginalV = 0;
       if(textPlateAndKms[1] === 'undefined' || textPlateAndKms[1] === undefined) {
         this.baseState.Kilo = 0;
-        this.state.confidence = 0.10;
+        //this.state.confidence = 0.10;
+        this.state.KilometersConfidence = 0.10;
       }else{
         KilometersOriginalV = textPlateAndKms[1];
         KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
@@ -500,19 +535,27 @@ class Photo extends Component {
         KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
         KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
         if (typeof num1 != 'number'){
-          this.state.confidence = 0.10;
+          //this.state.confidence = 0.10;
+          this.state.KilometersConfidence = 0.10;
+          KilometersConfidenceV = this.state.KilometersConfidence
         }else if(isNaN(KilometersOriginalV)){
-          this.state.confidence = 0.10;
+          //this.state.confidence = 0.10;
+          this.state.KilometersConfidence = 0.10;
+          KilometersConfidenceV = this.state.KilometersConfidence
         }else if(parseInt(KilometersOriginalV) > 0){
           KilometersOriginalV = parseInt(KilometersOriginalV);
         }else{
-          this.state.confidence = 0.10;
+          //this.state.confidence = 0.10;
+          this.state.KilometersConfidence = 0.10;
+          KilometersConfidenceV = this.state.KilometersConfidence
         }
         
           if(this.state.start){
             this.state.kilometersbegin = KilometersOriginalV
+            this.baseState.startKilometer = this.state.kilometersbegin
           }else {
             this.state.kilometersend = KilometersOriginalV
+            this.baseState.endKilometer = this.state.kilometersend
           }
         this.baseState.Kilo = KilometersOriginalV;
       }
@@ -544,9 +587,9 @@ class Photo extends Component {
       KilometersV = this.state.Kilometers;
       //=====================Kilometers================================
       //=====================KilometersConfidence======================
-      this.state.KilometersConfidence = this.state.confidence;
-      console.log(this.state.KilometersConfidence);
-      KilometersConfidenceV = this.state.KilometersConfidence;
+      //this.state.KilometersConfidence = this.state.confidence;
+      //console.log(this.state.KilometersConfidence);
+      //KilometersConfidenceV = this.state.KilometersConfidence;
       //=====================KilometersConfidence======================
       //=====================KilometersUntrusted=======================
       this.state.KilometersUntrusted = 'TRUE';
@@ -604,6 +647,9 @@ class Photo extends Component {
         subirafirebase = await uploadToDatabase(data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
           );
         this.setState({ repeat: 0,});
+        // if(TypeV == 'end'){
+        //   this.setState({startKilometer: 0, endKilometer: 0})
+        // }
         this.setState({ Type: 'start',});
         // console.log(this.state);
         // console.log(this.baseState);
