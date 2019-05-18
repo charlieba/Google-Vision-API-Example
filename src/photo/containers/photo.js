@@ -112,7 +112,7 @@ class Photo extends Component {
 
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists testf (id_pic integer primary key not null, TripCode text, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, addedByPhone text, synchronized text);'
+        'create table if not exists testfinal (id_pic integer primary key not null, TripCode text, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, picURL text, addedByPhone text, synchronized text);'
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
     });    
@@ -165,6 +165,7 @@ class Photo extends Component {
     let UbicationV;
     let TypeV;
     let LogoV;
+    let picURLV;
     let addedByPhoneV;
     let synchronizedV;
     let repeatV;
@@ -188,12 +189,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -257,10 +258,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -273,12 +274,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -633,6 +634,9 @@ class Photo extends Component {
       //=====================Logo=======================================
       LogoV = this.state.Logo;
       //=====================Logo=======================================
+      //=====================picRUL=======================================
+      picURLV = this.state.image;
+      //=====================picRUL=======================================
       //=====================addedByPhone===============================
       addedByPhoneV = this.state.addedByPhone;
       //=====================addedByPhone===============================
@@ -653,13 +657,13 @@ class Photo extends Component {
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
         db.transaction(
           tx => {
-            tx.executeSql('insert into testf (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV, synchronizedV]);
-            tx.executeSql('select * from testf', [], (_, { rows }) =>
+            tx.executeSql('insert into testfinal (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV, synchronizedV]);
+            tx.executeSql('select * from testfinal', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
         );
-        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, addedByPhoneV,
+        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,
           );
         this.setState({ repeat: 0,});
         // if(TypeV == 'end'){
@@ -800,6 +804,7 @@ async function uploadToDatabase(
   Location,
   Type,
   Logo,
+  picURL,
   addedByPhone,
   ) {
       firebase.database().ref('Viajes/').push({
@@ -817,6 +822,7 @@ async function uploadToDatabase(
         Location,
         Type,
         Logo,
+        picURL,
         addedByPhone,
     }).then((data)=>{
         //success callback
