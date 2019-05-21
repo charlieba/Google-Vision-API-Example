@@ -205,12 +205,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -274,10 +274,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -290,12 +290,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
