@@ -130,6 +130,8 @@ class Photo extends Component {
     this.interval = setInterval(
       () => {
         subirafirebase = submitToFirebase();
+        //GET no synchronized data
+        this._getNoSynchronized();
       },
       40000
     );
@@ -752,8 +754,8 @@ class Photo extends Component {
 
       this.setState(this.baseState);
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
-        this.setState({synchronized: 'true'})
-        synchronizedV = this.state.synchronized;
+        //this.setState({synchronized: 'true'})
+        //synchronizedV = this.state.synchronized;
         db.transaction(
           tx => {
             tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
@@ -897,12 +899,13 @@ async function submitToFirebase() {
   console.log('### EJECUTANDO SINCRONIZACIÓN ###');
   try {
     db.transaction(tx => {
-      tx.executeSql('select * from test WHERE synchronized=?', ['False'], (_, { rows }) =>
+      tx.executeSql('select * from trip_test WHERE synchronized=?', ['False'], (_, { rows }) =>
       {
         
         for(x=0;x<rows.length;x++)  {
           let ele = rows._array[x];
-          database.ref('/Trip').push({
+          database.ref('/Viajes').push({
+            TripCode:ele.TripCode,
             DateTime:ele.DataTime,
             Kilometers:ele.Kilometers,
             KilometersConfidence:ele.KilometersConfidence,
@@ -910,7 +913,7 @@ async function submitToFirebase() {
             KilometersUntrusted:ele.KilometersUntrusted,
             Location:ele.Location,
             Logo:ele.Logo,
-            PicURL:'',
+            picURL:ele.picURL,
             TruckPlate:ele.TruckPlate,
             TruckPlateConfidence:ele.TruckPlateConfidence,
             TruckPlateOriginal:ele.TruckPlateOriginal,
@@ -921,7 +924,7 @@ async function submitToFirebase() {
           }).then((data)=>{
               
               db.transaction(function (tx2) {
-                tx2.executeSql('update test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
+                tx2.executeSql('update trip_test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
                   });
               });
               console.log('enviado registro no. '+ele.id_pic);
