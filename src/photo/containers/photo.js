@@ -26,7 +26,7 @@ class Photo extends Component {
 		image: null,
 		uploading: false,
     googleResponse: null,
-    TripCode:0,
+    TripCode: '',
     confidence: 0,
     confidence_min: 0.70,
     date: '',
@@ -57,6 +57,8 @@ class Photo extends Component {
     repeat: 0,
     startKilometer: 0,
     endKilometer: 0,
+    temporal: '',
+    noSynchronized: 0,
   };
 
   baseState = {
@@ -110,12 +112,20 @@ class Photo extends Component {
     
     //this.update();
 
+    //Create DB
     db.transaction(tx => {
       tx.executeSql(
-        'create table if not exists testfinal (id_pic integer primary key not null, TripCode text, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, picURL text, addedByPhone text, synchronized text);'
+        'create table if not exists trip_test (id_pic integer primary key not null, TripCode text, DataTime text, TruckPlate text, TruckPlateOriginal text, TruckPlateConfidence text, TruckPlateUntrusted text, Kilometers text, KilometersOriginal text, KilometersConfidence text, KilometersUntrusted text, Unit text, Location text, Type text, Logo text, picURL text, picLocal text,  addedByPhone text, synchronized text);'
         //'create table if not exists pic (id integer primary key not null, done int, value text);'
       );
-    });    
+    });
+
+    
+    //GET state inicial of trip
+    this._getInitialstate();
+
+    //GET no synchronized data
+    this._getNoSynchronized();
   }
   
   _getLocationAsync = async () => {
@@ -144,7 +154,7 @@ class Photo extends Component {
     }
     // let googleResponseV;
     // let confidenceV;
-    let TripCodeV
+    let TripCodeV = '';
     let dateV;
     let timeV;
     let data_timeV;
@@ -166,9 +176,11 @@ class Photo extends Component {
     let TypeV;
     let LogoV;
     let picURLV;
+    let picLocal;
     let addedByPhoneV;
     let synchronizedV;
     let repeatV;
+    let temporalV;
 
     //=====================DATA_TIME====================
     var today = new Date();
@@ -182,6 +194,10 @@ class Photo extends Component {
 					style={styles.container}
 					contentContainerStyle={styles.contentContainer}
         >
+        { this.state.noSynchronized != 0 &&(     
+          <Text style={styles.noSynchronized}>Tienes { this.state.noSynchronized } viajes pendientes de sincronizar</Text>
+        )}
+
           <View style={styles.helpContainer}>
             <View style={styles.getStartedContainer}>
               {image ? null : (
@@ -189,12 +205,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {image ? null : (
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -258,10 +274,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {<Button
+           {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />}
+           />*/}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -274,12 +290,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )}
+        )*/}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -296,7 +312,74 @@ class Photo extends Component {
 	// _renderItem = item => {
   //   <Text>response: {JSON.stringify(item)}</Text>;
   //   console.log(JSON.stringify())
-	// };
+  // };
+  
+//GET state inicial of trip
+  _getInitialstate = () => {
+    db.transaction(
+      tx4 => {
+        tx4.executeSql(' SELECT * FROM trip_test ORDER BY id_pic DESC LIMIT 1;', [], (_, { rows }) => 
+        {
+          let tempo1 = 'start' ;
+          let kileterTemp = '';
+          let tripCodeTemp = '';
+
+          if(rows._array[0])
+          {
+            let tempo1 = rows._array[0].Type;
+            let kileterTemp = rows._array[0].KilometersOriginal;
+            let tripCodeTemp = rows._array[0].TripCode;
+
+            //var temporalV = JSON.stringify(rows),
+            //console.log(JSON.stringify(rows._array[0].Type))
+            //console.log(rows._array[0].Type)
+            this.setState ({temporal: tempo1})
+            //console.log(this.state.temporal)
+            //console.log(JSON.stringify(rows))
+            //console.log('temporalV')
+            console.log(tempo1);
+            console.log(this.state.temporal);
+            if(this.state.temporal === 'start'){
+              console.log('para terminar');
+              this.setState({
+                start: false,
+                showData: true,
+                TripCode: tripCodeTemp,
+                image: 'foo',
+                Type: 'end',
+              });
+              this.baseState.startKilometer = kileterTemp
+              this.baseState.Kilo = kileterTemp
+            }else{
+              console.log('para iniciar');
+              this.setState({
+                start: true,
+                showData: false,
+
+              });
+              console.log(this.state.start);
+            }
+          }
+        }
+        );
+    });
+  }
+
+//GET no synchronized data
+  _getNoSynchronized = () => {
+    db.transaction(
+      tx5 => {
+        tx5.executeSql(' SELECT count(*) AS number FROM trip_test WHERE synchronized=?', ['False'], (_, { rows }) => 
+        {
+          let noSynchronizedV = rows._array[0].number;
+          this.setState ({ noSynchronized: noSynchronizedV})
+          console.log('no sincronizado')
+          console.log(this.state.noSynchronized)
+          console.log(JSON.stringify(rows))
+        }
+        );
+    });
+  }
 
 	_share = () => {
 		Share.share({
@@ -345,6 +428,11 @@ class Photo extends Component {
 		} finally {
 			this.setState({ uploading: false });
     }
+
+    console.log('la url local')
+    picLocalV = pickerResult.uri;
+    console.log(pickerResult.uri)
+    console.log('la url local')
     
     this.submitToGoogle();
   };
@@ -453,7 +541,8 @@ class Photo extends Component {
         // console.log(min);
         //console.log(this._tripCode(max, min));
         var code = this._tripCode(max, min)
-        this.setState({ TripCode: code,});
+        toStringV = code.toString();
+        this.setState({ TripCode: toStringV,});
         console.log(this.state.TripCode);
         console.log('Numero aleatorio');
       }
@@ -655,24 +744,21 @@ class Photo extends Component {
 
       this.setState(this.baseState);
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
+        //this.setState({synchronized: 'true'})
+        //synchronizedV = this.state.synchronized;
         db.transaction(
           tx => {
-            tx.executeSql('insert into testfinal (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV, synchronizedV]);
-            tx.executeSql('select * from testfinal', [], (_, { rows }) =>
+            tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
+            tx.executeSql('select * from trip_test', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
         );
-        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,
-          );
+        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,);
         this.setState({ repeat: 0,});
-        // if(TypeV == 'end'){
-        //   this.setState({startKilometer: 0, endKilometer: 0})
-        // }
         this.setState({ Type: 'start',});
-        // console.log(this.state);
-        // console.log(this.baseState);
-        // console.log(this.baseState.showImage);
+        //GET no synchronized data
+        this._getNoSynchronized();
       }
 		} catch (error) {
 			console.log(error);
@@ -685,8 +771,7 @@ class Photo extends Component {
     try {
       db.transaction(tx => {
         tx.executeSql('select * from test WHERE synchronized=?', ['False'], (_, { rows }) =>
-        {
-          
+        { 
           for(x=0;x<rows.length;x++)  {
             let ele = rows._array[x];
             database.ref('/Trip').push({
@@ -758,7 +843,11 @@ const styles = StyleSheet.create({
 		flex: 1,
     backgroundColor: '#fff',
 		paddingBottom: 10
-	},
+  },
+  noSynchronized:{
+    paddingTop: 45,
+    textAlign: 'center'
+  },
 	developmentModeText: {
 		marginBottom: 20,
 		color: 'rgba(0,0,0,0.4)',
@@ -772,7 +861,7 @@ const styles = StyleSheet.create({
 
 	getStartedContainer: {
 		alignItems: 'center',
-		marginHorizontal: 50
+		marginHorizontal: 60
 	},
 
 	getStartedText: {
