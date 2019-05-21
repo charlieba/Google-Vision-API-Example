@@ -744,8 +744,8 @@ class Photo extends Component {
 
       this.setState(this.baseState);
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
-        //this.setState({synchronized: 'true'})
-        //synchronizedV = this.state.synchronized;
+        this.setState({synchronized: 'true'})
+        synchronizedV = this.state.synchronized;
         db.transaction(
           tx => {
             tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
