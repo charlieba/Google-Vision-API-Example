@@ -23,12 +23,13 @@ const db = SQLite.openDatabase('db.db');
 
 class Photo extends Component {
 	state = {
-		image: null,
+    image: null,
+    image64: null,
 		uploading: false,
     googleResponse: null,
     TripCode: '',
     confidence: 0,
-    confidence_min: 0.70,
+    confidence_min: 100,
     date: '',
     time: '',
     data_time: '',
@@ -185,6 +186,7 @@ class Photo extends Component {
     let UbicationV;
     let TypeV;
     let LogoV;
+    let picResultV
     let picURLV;
     let picLocal;
     let addedByPhoneV;
@@ -215,17 +217,17 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {image ? null : (
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-              {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
+            {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
                 {this.state.start &&( 
@@ -240,6 +242,7 @@ class Photo extends Component {
                   title="Aceptar" />
               </View>    
             )}
+
 						{this._maybeRenderImage()}
             {this._maybeRenderUploadingOverlay()}
           </View>
@@ -284,14 +287,15 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {<Button
+           {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />}
+           />*/}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
+
       <View style={styles.getStartedContainer}>
 				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <View>
@@ -300,12 +304,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )}
+        )*/}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -407,6 +411,7 @@ class Photo extends Component {
 	_takePhoto = async () => {
     //subirafirebase = await uploadToDatabase("000001","000002");
 		let pickerResult = await ImagePicker.launchCameraAsync({
+      base64: true,
 			allowsEditing: true,
 			aspect: [4, 3]
 		});
@@ -417,6 +422,7 @@ class Photo extends Component {
 
 	_pickImage = async () => {
 		let pickerResult = await ImagePicker.launchImageLibraryAsync({
+      base64: true,
 			allowsEditing: true,
 			aspect: [4, 3]
 		});
@@ -425,21 +431,10 @@ class Photo extends Component {
 	};
 
 	_handleImagePicked = async pickerResult => {
-		try {
-			this.setState({ uploading: true });
-
-			if (!pickerResult.cancelled) {
-        uploadUrl = await uploadImageAsync(pickerResult.uri);
-				this.setState({ image: uploadUrl });
-			}
-		} catch (e) {
-			console.log(e);
-			alert('Upload failed, sorry :(');
-		} finally {
-			this.setState({ uploading: false });
-    }
-
     console.log('la url local')
+    console.log(pickerResult.base64);
+    picResultV = pickerResult;
+    this.setState({ image64: pickerResult.base64 });
     picLocalV = pickerResult.uri;
     console.log(pickerResult.uri)
     console.log('la url local')
@@ -492,26 +487,16 @@ class Photo extends Component {
 	submitToGoogle = async () => {
 		try {
 			this.setState({ uploading: true,});
-			let { image } = this.state;
+      let { image } = this.state;
+      let { image64 } = this.state;
 			let body = JSON.stringify({
 				requests: [
 					{
 						features: [
-							// { type: 'LABEL_DETECTION', maxResults: 10 },
-							// { type: 'LANDMARK_DETECTION', maxResults: 5 },
-							// { type: 'FACE_DETECTION', maxResults: 5 },
-							// { type: 'LOGO_DETECTION', maxResults: 5 },
-							// { type: 'TEXT_DETECTION', maxResults: 5 },
 							{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 10 },
-							// { type: 'SAFE_SEARCH_DETECTION', maxResults: 5 },
-							// { type: 'IMAGE_PROPERTIES', maxResults: 5 },
-							// { type: 'CROP_HINTS', maxResults: 5 },
-							// { type: 'WEB_DETECTION', maxResults: 5 }
 						],
 						image: {
-							source: {
-								imageUri: image
-							}
+							content: image64
 						}
 					}
 				]
@@ -528,18 +513,20 @@ class Photo extends Component {
 					body: body
 				}
 			);
-			let responseJson = await response.json();
+      let responseJson = await response.json();
+      //let responseJson = null;
       //console.log(responseJson);
       //console.log(responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence);
-      this.setState({
-				googleResponse: responseJson,
-        uploading: false,
-        confidence: responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence,
-        array: responseJson.responses[0].textAnnotations,
-        kilometersbegin: 0,
-        kilometersend: 0
-      });
-
+      if(responseJson){
+        this.setState({
+          googleResponse: responseJson,
+          uploading: false,
+          confidence: responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence,
+          array: responseJson.responses[0].textAnnotations,
+          kilometersbegin: 0,
+          kilometersend: 0
+        });
+      }
       this._changeShow()
       //console.log(this.state.googleResponse);
       //=====================TripCode=+++==========================
@@ -547,9 +534,6 @@ class Photo extends Component {
         console.log('Numero aleatorio');
         var max = Math.round((new Date()));
         var min = Math.round((new Date()).getTime() / 1000);
-        // console.log(max);
-        // console.log(min);
-        //console.log(this._tripCode(max, min));
         var code = this._tripCode(max, min)
         toStringV = code.toString();
         this.setState({ TripCode: toStringV,});
@@ -558,9 +542,6 @@ class Photo extends Component {
       }
       TripCodeV = this.state.TripCode;
       //=====================TripCode=+++==========================
-      //=====================Confidence============================
-      ConfidenceV = this.state.confidence;
-      //=====================Confidence============================
       //=====================Coords================================
       this._getLocationAsync()
       if (this.state.errorMessage) {
@@ -578,143 +559,6 @@ class Photo extends Component {
       console.log(this.state.data_time);
       data_timeV = this.state.data_time;
       //=====================DATATIME================================
-      //=====================TruckPlateOriginal======================
-      let palabra = 'PLACA'
-      var arreglo = [];
-      var text = this.state.array[0]["description"];
-      console.log("texto sin modificar: "+text);
-      text=text.toLowerCase();
-      text=text.replace(/ /g,"");
-      text=text.replace(/paraestarseguro/g,"");
-      text=text.replace(/...paraestarseguro/g,"");
-      text=text.replace(/paraestarseg0r0/g,"");
-      text=text.replace(/...paraestarseg0r0/g,"");
-      text=text.replace(/\./g,"");
-      text=text.replace(/,/g,"");
-      text=text.replace(/ /g,'');
-      text=text.replace(/\\/g,"");
-      text=text.replace(/\n/g,",");
-      text=text.replace(/o/g,"0");
-      text=text.replace(/u/g,"0");
-
-
-      var text = text.substring(
-        text.lastIndexOf("placa") + 5, 
-        text.lastIndexOf(",kms")
-      );
-      text=text.replace(/,,/g,",");
-      textPlateAndKms = text.split(",");
-        
-
-      console.log("texto modificado: "+text);
-      
-      
-      for (let i =0; i < this.state.array.length; i++ ){
-        arreglo.push(this.state.array[i].description);
-      }
-      console.log(arreglo.indexOf(palabra));
-      var positionPlaca = arreglo.indexOf(palabra);
-      this.state.TruckPlateOriginal = this.state.TruckPlateOriginal.concat(arreglo[positionPlaca + 1], arreglo[positionPlaca + 2], arreglo[positionPlaca + 3]); 
-      console.log(this.state.TruckPlateOriginal);
-      TruckPlateOriginalV = this.state.TruckPlateOriginal;
-      //=====================TruckPlateOriginal========================
-      //=====================TruckPlate================================
-      this.state.TruckPlate = this.state.TruckPlateOriginal;
-      TruckPlateV = this.state.TruckPlate;
-      //=====================TruckPlate================================
-
-      //=====================TruckPlateConfidence======================
-      this.state.TruckPlateConfidence = this.state.confidence;
-      console.log(this.state.confidence);
-      TruckPlateConfidenceV = this.state.TruckPlateConfidence;
-      //=====================TruckPlateConfidence======================
-      //=====================TruckPlateUntrusted=======================
-      this.state.TruckPlateUntrusted = 'TRUE';
-      console.log(this.state.TruckPlateUntrusted);
-      TruckPlateUntrustedV = this.state.TruckPlateUntrusted;
-      //=====================TruckPlateUntrusted=======================
-
-      //=====================KilometersOriginal========================
-      //this.state.kms = arreglo[positionPlaca + 4]; 
-      var foo = '';
-      KilometersOriginalV = 0;
-      if(textPlateAndKms[1] === 'undefined' || textPlateAndKms[1] === undefined) {
-        this.baseState.Kilo = 0;
-        //this.state.confidence = 0.10;
-        this.state.KilometersConfidence = 0.10;
-      }else{
-        KilometersOriginalV = textPlateAndKms[1];
-        KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
-        KilometersOriginalV=KilometersOriginalV.replace(/e/g,'3');
-        KilometersOriginalV=KilometersOriginalV.replace(/t/g,'7');
-        KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
-        KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
-        KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
-        if (typeof num1 != 'number'){
-          //this.state.confidence = 0.10;
-          this.state.KilometersConfidence = 0.10;
-          KilometersConfidenceV = this.state.KilometersConfidence
-        }else if(isNaN(KilometersOriginalV)){
-          //this.state.confidence = 0.10;
-          this.state.KilometersConfidence = 0.10;
-          KilometersConfidenceV = this.state.KilometersConfidence
-        }else if(parseInt(KilometersOriginalV) > 0){
-          KilometersOriginalV = parseInt(KilometersOriginalV);
-        }else{
-          //this.state.confidence = 0.10;
-          this.state.KilometersConfidence = 0.10;
-          KilometersConfidenceV = this.state.KilometersConfidence
-        }
-        
-          if(this.state.start){
-            this.state.kilometersbegin = KilometersOriginalV
-            this.baseState.startKilometer = this.state.kilometersbegin
-          }else {
-            this.state.kilometersend = KilometersOriginalV
-            this.baseState.endKilometer = this.state.kilometersend
-          }
-        this.baseState.Kilo = KilometersOriginalV;
-      }
-      
-
-
-
-      /*for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
-      {
-        var num = arreglo[j];
-        parseInt(num);
-        var digito;
-        console.log(num);
-        if (/^([0-100])*$/.test(num))
-        {
-          digito = num;
-        }else{
-          digito = arreglo[j];
-        }
-          this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, digito);
-          console.log(this.state.KilometersOriginal);
-          KilometersOriginalV = this.state.KilometersOriginal;
-          this.baseState.Kilo = KilometersOriginalV;
-      }*/
-      //=====================KilometersOriginal========================
-      //=====================Kilometers================================
-      this.state.Kilometers = this.state.KilometersOriginal;
-      console.log(this.state.Kilometers);
-      KilometersV = this.state.Kilometers;
-      //=====================Kilometers================================
-      //=====================KilometersConfidence======================
-      //this.state.KilometersConfidence = this.state.confidence;
-      //console.log(this.state.KilometersConfidence);
-      //KilometersConfidenceV = this.state.KilometersConfidence;
-      //=====================KilometersConfidence======================
-      //=====================KilometersUntrusted=======================
-      this.state.KilometersUntrusted = 'TRUE';
-      console.log(this.state.KilometersUntrusted);
-      KilometersUntrustedV = this.state.KilometersUntrusted;
-      //=====================KilometersUntrusted=======================
-      //=====================Unit======================================
-      UnitV = this.state.Unit;
-      //=====================Unit======================================
       //=====================LOCATION==================================
       this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
       console.log(this.state.Ubication);
@@ -730,46 +574,243 @@ class Photo extends Component {
       // console.log(this.state.type)
       TypeV = this.state.Type;
       //=====================Type=======================================
-      //=====================Logo=======================================
-      LogoV = this.state.Logo;
-      //=====================Logo=======================================
-      //=====================picRUL=======================================
-      picURLV = this.state.image;
-      //=====================picRUL=======================================
-      //=====================addedByPhone===============================
-      addedByPhoneV = this.state.addedByPhone;
-      //=====================addedByPhone===============================
-      //=====================synchronized===============================
-      synchronizedV = this.state.synchronized;
-      //=====================synchronized===============================
-      if (this.state.confidence < this.state.confidence_min){
-        if(this.state.repeat == 0){
-          this.setState({ repeat: 1,});
-          repeatV = this.state.repeat;
-        }else if(this.state.repeat == 1){
-          this.setState({ repeat: 2,});
-          repeatV = this.state.repeat;
-        } 
-      }
+      //conf parametros para trabajar sin red
+      // if(!responseJson)
+      // {
+      //   console.log('sin red');
+      //   this.setState({
+      //     image: picLocalV,
+      //     showData: true,
+      //     start: false,
+      //   });
+      // }
 
-      this.setState(this.baseState);
-      if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
-        //this.setState({synchronized: 'true'})
-        //synchronizedV = this.state.synchronized;
+
+      //=====================IF NETWOK==================================
+      if (this.state.confidence < this.state.confidence_min){
+          if(this.state.repeat == 0){
+            this.setState({ repeat: 1,});
+            repeatV = this.state.repeat;
+          }else if(this.state.repeat == 1){
+            this.setState({ repeat: 2,});
+            repeatV = this.state.repeat;
+          } 
+        }
+
+        //this.setState(this.baseState);
+        if(responseJson){
+        //=====================Confidence===============================
+        ConfidenceV = this.state.confidence;
+        //=====================Confidence===============================
+        //=====================TruckPlateOriginal=======================
+        let palabra = 'PLACA'
+        var arreglo = [];
+        var text = this.state.array[0]["description"];
+        console.log("texto sin modificar: "+text);
+        text=text.toLowerCase();
+        text=text.replace(/ /g,"");
+        text=text.replace(/paraestarseguro/g,"");
+        text=text.replace(/...paraestarseguro/g,"");
+        text=text.replace(/paraestarseg0r0/g,"");
+        text=text.replace(/...paraestarseg0r0/g,"");
+        text=text.replace(/\./g,"");
+        text=text.replace(/,/g,"");
+        text=text.replace(/ /g,'');
+        text=text.replace(/\\/g,"");
+        text=text.replace(/\n/g,",");
+        text=text.replace(/o/g,"0");
+        text=text.replace(/u/g,"0");
+
+
+        var text = text.substring(
+          text.lastIndexOf("placa") + 5, 
+          text.lastIndexOf(",kms")
+        );
+        text=text.replace(/,,/g,",");
+        textPlateAndKms = text.split(",");
+          
+
+        console.log("texto modificado: "+text);
+        
+        
+        for (let i =0; i < this.state.array.length; i++ ){
+          arreglo.push(this.state.array[i].description);
+        }
+        console.log(arreglo.indexOf(palabra));
+        var positionPlaca = arreglo.indexOf(palabra);
+        this.state.TruckPlateOriginal = this.state.TruckPlateOriginal.concat(arreglo[positionPlaca + 1], arreglo[positionPlaca + 2], arreglo[positionPlaca + 3]); 
+        console.log(this.state.TruckPlateOriginal);
+        TruckPlateOriginalV = this.state.TruckPlateOriginal;
+        //=====================TruckPlateOriginal========================
+        //=====================TruckPlate================================
+        this.state.TruckPlate = this.state.TruckPlateOriginal;
+        TruckPlateV = this.state.TruckPlate;
+        //=====================TruckPlate================================
+
+        //=====================TruckPlateConfidence======================
+        this.state.TruckPlateConfidence = this.state.confidence;
+        console.log(this.state.confidence);
+        TruckPlateConfidenceV = this.state.TruckPlateConfidence;
+        //=====================TruckPlateConfidence======================
+        //=====================TruckPlateUntrusted=======================
+        this.state.TruckPlateUntrusted = 'TRUE';
+        console.log(this.state.TruckPlateUntrusted);
+        TruckPlateUntrustedV = this.state.TruckPlateUntrusted;
+        //=====================TruckPlateUntrusted=======================
+
+        //=====================KilometersOriginal========================
+        //this.state.kms = arreglo[positionPlaca + 4]; 
+        var foo = '';
+        KilometersOriginalV = 0;
+        if(textPlateAndKms[1] === 'undefined' || textPlateAndKms[1] === undefined) {
+          this.baseState.Kilo = 0;
+          //this.state.confidence = 0.10;
+          this.state.KilometersConfidence = 0.10;
+        }else{
+          KilometersOriginalV = textPlateAndKms[1];
+          KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
+          KilometersOriginalV=KilometersOriginalV.replace(/e/g,'3');
+          KilometersOriginalV=KilometersOriginalV.replace(/t/g,'7');
+          KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
+          KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
+          KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
+          if (typeof num1 != 'number'){
+            //this.state.confidence = 0.10;
+            this.state.KilometersConfidence = 0.10;
+            KilometersConfidenceV = this.state.KilometersConfidence
+          }else if(isNaN(KilometersOriginalV)){
+            //this.state.confidence = 0.10;
+            this.state.KilometersConfidence = 0.10;
+            KilometersConfidenceV = this.state.KilometersConfidence
+          }else if(parseInt(KilometersOriginalV) > 0){
+            KilometersOriginalV = parseInt(KilometersOriginalV);
+          }else{
+            //this.state.confidence = 0.10;
+            this.state.KilometersConfidence = 0.10;
+            KilometersConfidenceV = this.state.KilometersConfidence
+          }
+          
+            if(this.state.start){
+              this.state.kilometersbegin = KilometersOriginalV
+              this.baseState.startKilometer = this.state.kilometersbegin
+            }else {
+              this.state.kilometersend = KilometersOriginalV
+              this.baseState.endKilometer = this.state.kilometersend
+            }
+          this.baseState.Kilo = KilometersOriginalV;
+        }
+        
+
+
+
+        /*for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
+        {
+          var num = arreglo[j];
+          parseInt(num);
+          var digito;
+          console.log(num);
+          if (/^([0-100])*$/.test(num))
+          {
+            digito = num;
+          }else{
+            digito = arreglo[j];
+          }
+            this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, digito);
+            console.log(this.state.KilometersOriginal);
+            KilometersOriginalV = this.state.KilometersOriginal;
+            this.baseState.Kilo = KilometersOriginalV;
+        }*/
+        //=====================KilometersOriginal========================
+        //=====================Kilometers================================
+        this.state.Kilometers = this.state.KilometersOriginal;
+        console.log(this.state.Kilometers);
+        KilometersV = this.state.Kilometers;
+        //=====================Kilometers================================
+        //=====================KilometersConfidence======================
+        //this.state.KilometersConfidence = this.state.confidence;
+        //console.log(this.state.KilometersConfidence);
+        //KilometersConfidenceV = this.state.KilometersConfidence;
+        //=====================KilometersConfidence======================
+        //=====================KilometersUntrusted=======================
+        this.state.KilometersUntrusted = 'TRUE';
+        console.log(this.state.KilometersUntrusted);
+        KilometersUntrustedV = this.state.KilometersUntrusted;
+        //=====================KilometersUntrusted=======================
+        //=====================Unit======================================
+        UnitV = this.state.Unit;
+        //=====================Unit=======================================
+        //=====================Logo=======================================
+        LogoV = this.state.Logo;
+        //=====================Logo=======================================
+        //=====================picRUL=====================================
+        try {
+          this.setState({ uploading: true });
+    
+          if (!picResultV.cancelled) {
+            uploadUrl = await uploadImageAsync(picResultV.uri);
+            this.setState({ image: uploadUrl });
+          }
+        } catch (e) {
+          console.log(e);
+          alert('Upload failed, sorry :(');
+        } finally {
+          this.setState({ uploading: false });
+        }
+        picURLV = this.state.image;
+        //=====================picRUL=======================================
+        //=====================addedByPhone===============================
+        addedByPhoneV = this.state.addedByPhone;
+        //=====================addedByPhone===============================
+        //=====================synchronized===============================
+        synchronizedV = this.state.synchronized;
+        //=====================synchronized===============================
+        // if (this.state.confidence < this.state.confidence_min){
+        //   if(this.state.repeat == 0){
+        //     this.setState({ repeat: 1,});
+        //     repeatV = this.state.repeat;
+        //   }else if(this.state.repeat == 1){
+        //     this.setState({ repeat: 2,});
+        //     repeatV = this.state.repeat;
+        //   } 
+        // }
+
+        this.setState(this.baseState);
+        if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
+          subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,);
+          this.setState({synchronized: 'true'})
+          synchronizedV = this.state.synchronized;
+          db.transaction(
+            tx => {
+              tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
+              tx.executeSql('select * from trip_test', [], (_, { rows }) =>
+                console.log(JSON.stringify(rows))
+              );
+            },
+          );
+          this.setState({ repeat: 0,});
+          this.setState({ Type: 'start',});
+          //GET no synchronized data
+          this._getNoSynchronized();
+        //=====================IF NETWORK===============================
+        }
+      }else{
+        this.setState(this.baseState);
+        this.setState({ synchronized: 'False', })
+        synchronizedV = this.state.synchronized;
         db.transaction(
           tx => {
-            tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
+            tx.executeSql('insert into trip_test (TripCode, DataTime, Location, Type, picLocal, synchronized) values (?, ?, ?, ?, ?, ?)', [TripCodeV, data_timeV, UbicationV, TypeV, picLocalV, synchronizedV]);
             tx.executeSql('select * from trip_test', [], (_, { rows }) =>
               console.log(JSON.stringify(rows))
             );
           },
         );
-        subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,);
         this.setState({ repeat: 0,});
         this.setState({ Type: 'start',});
         //GET no synchronized data
         this._getNoSynchronized();
       }
+      
 		} catch (error) {
 			console.log(error);
     }
