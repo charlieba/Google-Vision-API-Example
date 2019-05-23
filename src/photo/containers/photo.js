@@ -29,7 +29,7 @@ class Photo extends Component {
     googleResponse: null,
     TripCode: '',
     confidence: 0,
-    confidence_min: 100,
+    confidence_min: 0.20,
     date: '',
     time: '',
     data_time: '',
@@ -609,29 +609,19 @@ class Photo extends Component {
         console.log("texto sin modificar: "+text);
         text=text.toLowerCase();
         text=text.replace(/ /g,"");
-        text=text.replace(/paraestarseguro/g,"");
-        text=text.replace(/...paraestarseguro/g,"");
-        text=text.replace(/paraestarseg0r0/g,"");
-        text=text.replace(/...paraestarseg0r0/g,"");
         text=text.replace(/\./g,"");
         text=text.replace(/,/g,"");
         text=text.replace(/ /g,'');
         text=text.replace(/\\/g,"");
-        text=text.replace(/\n/g,",");
+        //text=text.replace(/\n/g,",");
         text=text.replace(/o/g,"0");
         text=text.replace(/u/g,"0");
 
-
         var text = text.substring(
-          text.lastIndexOf("placa") + 5, 
-          text.lastIndexOf(",kms")
+          text.lastIndexOf("-0537") + 5, 
+          text.lastIndexOf("kil0meters")
         );
-        text=text.replace(/,,/g,",");
-        textPlateAndKms = text.split(",");
-          
-
-        console.log("texto modificado: "+text);
-        
+        var textPlateAndKms = text;
         
         for (let i =0; i < this.state.array.length; i++ ){
           arreglo.push(this.state.array[i].description);
@@ -662,32 +652,43 @@ class Photo extends Component {
         //this.state.kms = arreglo[positionPlaca + 4]; 
         var foo = '';
         KilometersOriginalV = 0;
-        if(textPlateAndKms[1] === 'undefined' || textPlateAndKms[1] === undefined) {
+        console.log("kilometers "+textPlateAndKms)
+        if(textPlateAndKms =='undefined' || textPlateAndKms == undefined) {
           this.baseState.Kilo = 0;
           //this.state.confidence = 0.10;
           this.state.KilometersConfidence = 0.10;
         }else{
-          KilometersOriginalV = textPlateAndKms[1];
+          KilometersOriginalV = textPlateAndKms;
           KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
           KilometersOriginalV=KilometersOriginalV.replace(/e/g,'3');
           KilometersOriginalV=KilometersOriginalV.replace(/t/g,'7');
           KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
           KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
           KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
-          if (typeof num1 != 'number'){
-            //this.state.confidence = 0.10;
-            this.state.KilometersConfidence = 0.10;
-            KilometersConfidenceV = this.state.KilometersConfidence
-          }else if(isNaN(KilometersOriginalV)){
-            //this.state.confidence = 0.10;
-            this.state.KilometersConfidence = 0.10;
-            KilometersConfidenceV = this.state.KilometersConfidence
-          }else if(parseInt(KilometersOriginalV) > 0){
+          try {
             KilometersOriginalV = parseInt(KilometersOriginalV);
-          }else{
-            //this.state.confidence = 0.10;
+
+
+            if (typeof KilometersOriginalV != 'number'){
+
+              this.state.KilometersConfidence = 0.10;
+              KilometersConfidenceV = this.state.KilometersConfidence
+            }else if(isNaN(KilometersOriginalV)){
+              this.state.KilometersConfidence = 0.10;
+              KilometersConfidenceV = this.state.KilometersConfidence
+            }else if(KilometersOriginalV < 0 || KilometersOriginalV == 0){
+              KilometersOriginalV = parseInt(KilometersOriginalV);
+            }else{
+              this.state.KilometersConfidence=0.90;
+              KilometersConfidenceV = this.state.KilometersConfidence;
+
+            }
+            console.log("confidence "+this.state.KilometersConfidence);
+            
+          }
+          catch (e) {
             this.state.KilometersConfidence = 0.10;
-            KilometersConfidenceV = this.state.KilometersConfidence
+            console.error(e.message);
           }
           
             if(this.state.start){
