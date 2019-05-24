@@ -129,9 +129,11 @@ class Photo extends Component {
     // Se crea un timer que ejecuta la sincronización con Firebase cada 4 mins.
     this.interval = setInterval(
       () => {
-        if (this.state.start){
+        if (this.state.start == true){
           subirafirebase = submitToFirebase();
         }
+        //GET no synchronized data
+        this._getNoSynchronized();
       },
       40000
     );
@@ -215,12 +217,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -284,10 +286,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -300,12 +302,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -754,8 +756,8 @@ class Photo extends Component {
 
       this.setState(this.baseState);
       if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
-        this.setState({synchronized: 'true'})
-        synchronizedV = this.state.synchronized;
+        //this.setState({synchronized: 'true'})
+        //synchronizedV = this.state.synchronized;
         db.transaction(
           tx => {
             tx.executeSql('insert into trip_test (TripCode, DataTime,TruckPlate, TruckPlateOriginal, TruckPlateConfidence, TruckPlateUntrusted, Kilometers, KilometersOriginal, KilometersConfidence, KilometersUntrusted, Unit, Location, Type, Logo, picURL, picLocal, addedByPhone, synchronized) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)', [TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, picLocalV, addedByPhoneV, synchronizedV]);
@@ -904,7 +906,8 @@ async function submitToFirebase() {
         
         for(x=0;x<rows.length;x++)  {
           let ele = rows._array[x];
-          database.ref('/Trip').push({
+          database.ref('/Viajes').push({
+            TripCode:ele.TripCode,
             DateTime:ele.DataTime,
             Kilometers:ele.Kilometers,
             KilometersConfidence:ele.KilometersConfidence,
@@ -912,7 +915,7 @@ async function submitToFirebase() {
             KilometersUntrusted:ele.KilometersUntrusted,
             Location:ele.Location,
             Logo:ele.Logo,
-            PicURL:'',
+            picURL:ele.picURL,
             TruckPlate:ele.TruckPlate,
             TruckPlateConfidence:ele.TruckPlateConfidence,
             TruckPlateOriginal:ele.TruckPlateOriginal,
