@@ -129,7 +129,9 @@ class Photo extends Component {
     // Se crea un timer que ejecuta la sincronización con Firebase cada 4 mins.
     this.interval = setInterval(
       () => {
-        subirafirebase = submitToFirebase();
+        if (this.state.start){
+          subirafirebase = submitToFirebase();
+        }
       },
       40000
     );
@@ -463,7 +465,7 @@ class Photo extends Component {
         //startKilometer: KilometersOriginalV
       });
       //this.baseState.startKilometer = this.state.startKilometer; 
-      console.log('final')
+      console.log('final');
       //console.log(this.baseState.startKilometer);
     }else if(!this.state.start){
       this.setState(this.baseState);
@@ -897,7 +899,7 @@ async function submitToFirebase() {
   console.log('### EJECUTANDO SINCRONIZACIÓN ###');
   try {
     db.transaction(tx => {
-      tx.executeSql('select * from test WHERE synchronized=?', ['False'], (_, { rows }) =>
+      tx.executeSql('select * from trip_test WHERE synchronized=?', ['False'], (_, { rows }) =>
       {
         
         for(x=0;x<rows.length;x++)  {
@@ -921,7 +923,7 @@ async function submitToFirebase() {
           }).then((data)=>{
               
               db.transaction(function (tx2) {
-                tx2.executeSql('update test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
+                tx2.executeSql('update trip_test set synchronized=\'True\' where id_pic='+ele.id_pic, [], function(tx3, rs3){
                   });
               });
               console.log('enviado registro no. '+ele.id_pic);
