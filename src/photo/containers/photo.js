@@ -2,7 +2,11 @@ import React, { Component } from 'react';
 import {
 	ActivityIndicator,
 	Button,
-	Clipboard,
+  Clipboard,
+  Dimensions,
+  LayoutAnimation,
+  StatusBar,
+  TouchableOpacity,
 	FlatList,
 	Image,
 	Share,
@@ -13,7 +17,7 @@ import {
   SafeAreaView,
   Platform,
 } from 'react-native';
-import { ImagePicker,Constants, Location, Permissions, SQLite } from 'expo';
+import { ImagePicker,Constants, BarCodeScanner, Location, Permissions, SQLite } from 'expo';
 import uuid from 'uuid';
 import firebase from '../../../config/firebase';
 import Environment from '../../../config/environment';
@@ -23,6 +27,8 @@ const db = SQLite.openDatabase('db.db');
 
 class Photo extends Component {
 	state = {
+    hasCameraPermission: 'granted',
+    lastScannedUrl: null,
     image: null,
     image64: null,
 		uploading: false,
@@ -138,6 +144,14 @@ class Photo extends Component {
     );
 
   }
+
+  _handleBarCodeRead = result => {
+    if (result.data !== this.state.lastScannedUrl) {
+      LayoutAnimation.spring();
+      this.setState({ lastScannedUrl: result.data });
+      //console.log(this.state.lastScannedUrl);
+    }
+  };
   
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -207,6 +221,27 @@ class Photo extends Component {
 					style={styles.container}
 					contentContainerStyle={styles.contentContainer}
         >
+
+        {this.state.hasCameraPermission === null
+          ? <Text>Requesting for camera permission</Text>
+          : this.state.hasCameraPermission === false
+              ? <Text style={{ color: '#fff' }}>
+                  Camera permission is not granted
+                </Text>
+              : <BarCodeScanner
+                  onBarCodeRead={this._handleBarCodeRead}
+                  style={{
+                    height: Dimensions.get('window').height,
+                    width: Dimensions.get('window').width,
+                  }}
+                />}
+
+        {this._maybeRenderUrl()}
+
+        <StatusBar hidden />
+
+        <Text style={styles.getStartedText}>{ this.state.lastScannedUrl }</Text>
+
         { this.state.noSynchronized != 0 &&(     
           <Text style={styles.noSynchronized}>Tienes { this.state.noSynchronized } viajes pendientes de sincronizar</Text>
         )}
@@ -253,7 +288,11 @@ class Photo extends Component {
 	}
 
 
-
+  _maybeRenderUrl = () => {
+    if (!this.state.lastScannedUrl) {
+      return;
+    }
+  }
 	_maybeRenderUploadingOverlay = () => {
 		if (this.state.uploading) {
 			return (
@@ -868,7 +907,27 @@ const styles = StyleSheet.create({
 	helpContainer: {
 		marginTop: 15,
 		alignItems: 'center'
-	}
+  },
+  
+  url: {
+    flex: 1,
+  },
+
+  urlText: {
+    color: '#fff',
+    fontSize: 20,
+  },
+
+  cancelButton: {
+    marginLeft: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  cancelButtonText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 18,
+  },
 });
 
 async function uploadToDatabase(
