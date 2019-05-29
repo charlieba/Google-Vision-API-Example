@@ -154,6 +154,7 @@ class Photo extends Component {
 
 	render() {
     let { image } = this.state;
+    let { image64 } = this.state;
     let text = 'Waiting..';
     if (this.state.errorMessage) {
       text = this.state.errorMessage;
@@ -217,12 +218,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -273,7 +274,7 @@ class Photo extends Component {
 	};
 
 	_maybeRenderImage = () => {
-		let { image, googleResponse } = this.state;
+		let { image64, image, googleResponse } = this.state;
 		if (!image) {
 			return;
 		}
@@ -287,10 +288,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -304,12 +305,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -434,7 +435,10 @@ class Photo extends Component {
     console.log('la url local')
     console.log(pickerResult.base64);
     picResultV = pickerResult;
-    this.setState({ image64: pickerResult.base64 });
+    this.setState({ 
+      image64: pickerResult.base64,
+      image:pickerResult.base64,
+     });
     picLocalV = pickerResult.uri;
     console.log(pickerResult.uri)
     console.log('la url local')
@@ -544,6 +548,8 @@ class Photo extends Component {
       //=====================TripCode=+++==========================
       //=====================Coords================================
       this._getLocationAsync()
+      let location = await Location.getCurrentPositionAsync({});
+      this.setState({ location });
       if (this.state.errorMessage) {
         text = this.state.errorMessage;
       } else if (this.state.location) {
@@ -553,12 +559,6 @@ class Photo extends Component {
         this.baseState.longi = this.state.lat;
       }
       //=====================Coords================================
-
-      //=====================DATATIME================================
-      this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
-      console.log(this.state.data_time);
-      data_timeV = this.state.data_time;
-      //=====================DATATIME================================
       //=====================LOCATION==================================
       this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
       console.log(this.state.Ubication);
@@ -566,6 +566,12 @@ class Photo extends Component {
       this.baseState.lati = this.state.lat;
       this.baseState.longi = this.state.long;
       //=====================Ubication==================================
+
+      //=====================DATATIME================================
+      this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
+      console.log(this.state.data_time);
+      data_timeV = this.state.data_time;
+      //=====================DATATIME================================
       //=====================Type=======================================
       // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
       // {
@@ -700,27 +706,6 @@ class Photo extends Component {
             }
           this.baseState.Kilo = KilometersOriginalV;
         }
-        
-
-
-
-        /*for (let j = positionPlaca + 4; j < positionPlaca + 10 ; j++)
-        {
-          var num = arreglo[j];
-          parseInt(num);
-          var digito;
-          console.log(num);
-          if (/^([0-100])*$/.test(num))
-          {
-            digito = num;
-          }else{
-            digito = arreglo[j];
-          }
-            this.state.KilometersOriginal = this.state.KilometersOriginal.concat(foo, digito);
-            console.log(this.state.KilometersOriginal);
-            KilometersOriginalV = this.state.KilometersOriginal;
-            this.baseState.Kilo = KilometersOriginalV;
-        }*/
         //=====================KilometersOriginal========================
         //=====================Kilometers================================
         this.state.Kilometers = this.state.KilometersOriginal;
