@@ -62,6 +62,7 @@ class Photo extends Component {
     showData: false,
     start: true,
     repeat: 0,
+    repeatKMS: 0,
     startKilometer: 0,
     endKilometer: 0,
     temporal: '',
@@ -101,6 +102,7 @@ class Photo extends Component {
     endKilometer: 0,
     //start: true,
     repeat: 0,
+    repeatKMS: 0,
   };
   
   
@@ -256,17 +258,17 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {image ? null : (
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-            {this.state.googleResponse && this.baseState.repeat != 1  && this.state.showData == false &&(     
+            { this.state.repeatKMS != 1 && this.state.googleResponse && this.baseState.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
                 {this.state.start &&( 
@@ -322,44 +324,58 @@ class Photo extends Component {
 		}
 
 		return (
-			<View style={styles.container}>
-      {this.state.showData == true && this.state.start == false && this.baseState.repeat != 1 && (  
+      <View style={styles.container}>
+      {this.state.repeatKMS == 1 && (
+        <View style={styles.getStartedContainer}>
+            <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
+            <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
+            {/*************Borrar despues******************/}
+            {/*
+            <Button
+              onPress={this._pickImage}
+              title="Elegir Imagen desde galeria"
+            />
+            */}
+            {/*************Borrar despues******************/}
+            <Button onPress={this._takePhoto} title="Tomar Foto" />
+        </View>
+      )}
+      {this.state.repeatKMS != 1 && this.baseState.repeat != 1 && this.state.showData == true && this.state.start == false && (  
         <View style={styles.getStartedContainer}>
           <Text style={styles.getStartedText}>Estos son los datos de tu Viaje</Text>
           <Text>KMS: {this.baseState.Kilo} </Text>
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {<Button
+           {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />}
+           />*/}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
       )}
 
       <View style={styles.getStartedContainer}>
-				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+          {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <View>
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )}
+        )*/}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 &&  (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
-      </View>
-
-      </View>
+      </View>    
+    </View>
       
 		);
 	};
@@ -600,7 +616,7 @@ class Photo extends Component {
         this.state.lat = JSON.stringify(this.state.location.coords.latitude);
         this.baseState.lati = this.state.lat;
         this.state.long = JSON.stringify(this.state.location.coords.longitude);
-        this.baseState.longi = this.state.lat;
+        this.baseState.longi = this.state.long;
       }
       //=====================Coords================================
       //=====================LOCATION==================================
@@ -639,7 +655,15 @@ class Photo extends Component {
       //=====================IF NETWOK==================================
       if (this.state.confidence < this.state.confidence_min){
           if(this.state.repeat == 0){
-            this.setState({ repeat: 1,});
+            this.setState({ 
+              repeat: 1,
+              lat:'',
+              long:'',
+              Ubication:'',
+              date:'',
+              time:'',
+              data_time:'',
+            });
             repeatV = this.state.repeat;
             this.baseState.repeat = repeatV
           }else if(this.state.repeat == 1){
@@ -728,12 +752,22 @@ class Photo extends Component {
           //==============CUSTOM CONFIDENCE==========================
           if (KilometersOriginalV.length == 8){
             KilometersOriginalV = KilometersOriginalV.concat(KilometersOriginalV, foo)
-          } if(KilometersOriginalV.length != 9)
+          }else if(KilometersOriginalV.length != 9)
           {
             this.state.KilometersConfidence = 0.10;
+            if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+              this.setState({ repeatKMS: 1,});
+              this.baseState.repeatKMS = this.state.repeatKMS;
+            }else if(this.state.repeatKMS == 1){
+              this.setState({ repeatKMS: 2,});
+              this.baseState.repeatKMS = this.state.repeatKMS;
+            } 
+            console.log(this.baseState.repeatKMS); 
             console.log('conf1'); 
-          }else{
+          }else if(KilometersOriginalV.length == 9) {
             this.state.KilometersConfidence = 0.90;
+            this.setState({ repeatKMS: 0,});
+            this.baseState.repeatKMS = this.state.repeatKMS;
           }
           //==============CUSTOMCONFIDENCE==========================
           try {
@@ -822,7 +856,10 @@ class Photo extends Component {
         // }
 
         this.setState(this.baseState);
-        if(ConfidenceV > this.state.confidence_min || repeatV == 0 || repeatV == 2){
+        console.log('antes de insert');
+        console.log(this.state.repeatKMS);
+        //console.log(repeatV);
+        if(this.baseState.repeatKMS == 0 || this.baseState.repeatKMS == 2){
           subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,);
           this.setState({synchronized: 'true'})
           synchronizedV = this.state.synchronized;
@@ -834,8 +871,13 @@ class Photo extends Component {
               );
             },
           );
-          this.setState({ repeat: 0,});
+          this.setState({ 
+            repeat: 0,
+            repeatKMS: 0,
+          });
           this.baseState.repeat = 0;
+          this.state.repeatKMS = 0;
+          this.baseState.repeatKMS = 0;
           this.setState({ Type: 'start',});
           //GET no synchronized data
           this._getNoSynchronized();
