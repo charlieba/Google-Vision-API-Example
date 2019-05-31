@@ -27,15 +27,15 @@ const db = SQLite.openDatabase('db.db');
 
 class Photo extends Component {
 	state = {
-    hasCameraPermission: 'granted',
-    lastScannedUrl: null,
+    //hasCameraPermission: 'granted', para leer qr
+    //lastScannedUrl: null, para leer qr
     image: null,
     image64: null,
 		uploading: false,
     googleResponse: null,
     TripCode: '',
     confidence: 0,
-    confidence_min: 0.20,
+    confidence_min: 0.2,
     date: '',
     time: '',
     data_time: '',
@@ -66,6 +66,7 @@ class Photo extends Component {
     endKilometer: 0,
     temporal: '',
     noSynchronized: 0,
+    local: false,
   };
 
   baseState = {
@@ -99,6 +100,7 @@ class Photo extends Component {
     startKilometer: 0,
     endKilometer: 0,
     //start: true,
+    repeat: 0,
   };
   
   
@@ -145,13 +147,14 @@ class Photo extends Component {
 
   }
 
-  _handleBarCodeRead = result => {
-    if (result.data !== this.state.lastScannedUrl) {
-      LayoutAnimation.spring();
-      this.setState({ lastScannedUrl: result.data });
-      //console.log(this.state.lastScannedUrl);
-    }
-  };
+  //Funcion de leer QR
+  // _handleBarCodeRead = result => {
+  //   if (result.data !== this.state.lastScannedUrl) {
+  //     LayoutAnimation.spring();
+  //     this.setState({ lastScannedUrl: result.data });
+  //     //console.log(this.state.lastScannedUrl);
+  //   }
+  // };
   
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -222,7 +225,7 @@ class Photo extends Component {
 					contentContainerStyle={styles.contentContainer}
         >
 
-        {this.state.hasCameraPermission === null
+        {/*{this.state.hasCameraPermission === null
           ? <Text>Requesting for camera permission</Text>
           : this.state.hasCameraPermission === false
               ? <Text style={{ color: '#fff' }}>
@@ -238,9 +241,9 @@ class Photo extends Component {
 
         {this._maybeRenderUrl()}
 
-        <StatusBar hidden />
+                <StatusBar hidden />
 
-        <Text style={styles.getStartedText}>{ this.state.lastScannedUrl }</Text>
+        <Text style={styles.getStartedText}>{ this.state.lastScannedUrl }</Text>*/}
 
         { this.state.noSynchronized != 0 &&(     
           <Text style={styles.noSynchronized}>Tienes { this.state.noSynchronized } viajes pendientes de sincronizar</Text>
@@ -263,7 +266,7 @@ class Photo extends Component {
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
-            {this.state.googleResponse && this.state.repeat != 1  && this.state.showData == false &&(     
+            {this.state.googleResponse && this.baseState.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
                 {this.state.start &&( 
@@ -320,7 +323,7 @@ class Photo extends Component {
 
 		return (
 			<View style={styles.container}>
-      {this.state.showData == true && this.state.start == false && (  
+      {this.state.showData == true && this.state.start == false && this.baseState.repeat != 1 && (  
         <View style={styles.getStartedContainer}>
           <Text style={styles.getStartedText}>Estos son los datos de tu Viaje</Text>
           <Text>KMS: {this.baseState.Kilo} </Text>
@@ -337,21 +340,21 @@ class Photo extends Component {
       )}
 
       <View style={styles.getStartedContainer}>
-				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+				{this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <View>
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.state.repeat == 1 &&  (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 &&  (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
         )}
       </View>
@@ -569,6 +572,8 @@ class Photo extends Component {
           kilometersbegin: 0,
           kilometersend: 0
         });
+      }else{
+        this.setState({local: true});
       }
       this._changeShow()
       //console.log(this.state.googleResponse);
@@ -636,14 +641,19 @@ class Photo extends Component {
           if(this.state.repeat == 0){
             this.setState({ repeat: 1,});
             repeatV = this.state.repeat;
+            this.baseState.repeat = repeatV
           }else if(this.state.repeat == 1){
             this.setState({ repeat: 2,});
             repeatV = this.state.repeat;
+            this.baseState.repeat = repeatV
           } 
-        }
+      }
+
+      console.log(this.state.confidence);
+      console.log(this.state.repeat);
 
         //this.setState(this.baseState);
-        if(responseJson){
+        if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
         //=====================Confidence===============================
         ConfidenceV = this.state.confidence;
         //=====================Confidence===============================
@@ -673,9 +683,11 @@ class Photo extends Component {
         }
         console.log(arreglo.indexOf(palabra));
         var positionPlaca = arreglo.indexOf(palabra);
-        this.state.TruckPlateOriginal = this.state.TruckPlateOriginal.concat(arreglo[positionPlaca + 1], arreglo[positionPlaca + 2], arreglo[positionPlaca + 3]); 
+        //this.state.TruckPlateOriginal = this.state.TruckPlateOriginal.concat(arreglo[positionPlaca + 1], arreglo[positionPlaca + 2], arreglo[positionPlaca + 3]); 
+        this.state.TruckPlateOriginal = 'P-913CDS';
         console.log(this.state.TruckPlateOriginal);
         TruckPlateOriginalV = this.state.TruckPlateOriginal;
+
         //=====================TruckPlateOriginal========================
         //=====================TruckPlate================================
         this.state.TruckPlate = this.state.TruckPlateOriginal;
@@ -695,9 +707,10 @@ class Photo extends Component {
 
         //=====================KilometersOriginal========================
         //this.state.kms = arreglo[positionPlaca + 4]; 
-        var foo = '';
+        var foo = '0';
         KilometersOriginalV = 0;
-        console.log("kilometers "+textPlateAndKms)
+        console.log("kilometers "+textPlateAndKms);
+        this.state.KilometersConfidence = 0.90;
         if(textPlateAndKms =='undefined' || textPlateAndKms == undefined) {
           this.baseState.Kilo = 0;
           //this.state.confidence = 0.10;
@@ -710,6 +723,19 @@ class Photo extends Component {
           KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
           KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
           KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
+
+          console.log("size2  "+KilometersOriginalV.length)
+          //==============CUSTOM CONFIDENCE==========================
+          if (KilometersOriginalV.length == 8){
+            KilometersOriginalV = KilometersOriginalV.concat(KilometersOriginalV, foo)
+          } if(KilometersOriginalV.length != 9)
+          {
+            this.state.KilometersConfidence = 0.10;
+            console.log('conf1'); 
+          }else{
+            this.state.KilometersConfidence = 0.90;
+          }
+          //==============CUSTOMCONFIDENCE==========================
           try {
             KilometersOriginalV = parseInt(KilometersOriginalV);
 
@@ -723,13 +749,8 @@ class Photo extends Component {
               KilometersConfidenceV = this.state.KilometersConfidence
             }else if(KilometersOriginalV < 0 || KilometersOriginalV == 0){
               KilometersOriginalV = parseInt(KilometersOriginalV);
-            }else{
-              this.state.KilometersConfidence=0.90;
-              KilometersConfidenceV = this.state.KilometersConfidence;
-
             }
-            console.log("confidence "+this.state.KilometersConfidence);
-            
+            console.log("confidence "+this.state.KilometersConfidence);            
           }
           catch (e) {
             this.state.KilometersConfidence = 0.10;
@@ -744,6 +765,7 @@ class Photo extends Component {
               this.baseState.endKilometer = this.state.kilometersend
             }
           this.baseState.Kilo = KilometersOriginalV;
+          KilometersConfidenceV = this.state.KilometersConfidence;
         }
         //=====================KilometersOriginal========================
         //=====================Kilometers================================
@@ -813,12 +835,13 @@ class Photo extends Component {
             },
           );
           this.setState({ repeat: 0,});
+          this.baseState.repeat = 0;
           this.setState({ Type: 'start',});
           //GET no synchronized data
           this._getNoSynchronized();
         //=====================IF NETWORK===============================
         }
-      }else{
+      }else if(this.state.local){
         this.setState(this.baseState);
         this.setState({ synchronized: 'False', })
         synchronizedV = this.state.synchronized;
@@ -830,7 +853,7 @@ class Photo extends Component {
             );
           },
         );
-        this.setState({ repeat: 0,});
+        this.setState({ repeat: 1,});
         this.setState({ Type: 'start',});
         //GET no synchronized data
         this._getNoSynchronized();
