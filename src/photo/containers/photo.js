@@ -258,12 +258,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -330,12 +330,12 @@ class Photo extends Component {
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
             {/*************Borrar despues******************/}
-            {/*
+            
             <Button
               onPress={this._pickImage}
               title="Elegir Imagen desde galeria"
             />
-            */}
+            
             {/*************Borrar despues******************/}
             <Button onPress={this._takePhoto} title="Tomar Foto" />
         </View>
@@ -347,10 +347,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -364,12 +364,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -491,7 +491,7 @@ class Photo extends Component {
 
 	_handleImagePicked = async pickerResult => {
     console.log('la url local')
-    console.log(pickerResult.base64);
+    //console.log(pickerResult.base64);
     picResultV = pickerResult;
     this.setState({ 
       image64: pickerResult.base64,
