@@ -258,12 +258,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {image ? null : (
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -330,11 +330,12 @@ class Photo extends Component {
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
             {/*************Borrar despues******************/}
-            
+            {/*
             <Button
               onPress={this._pickImage}
               title="Elegir Imagen desde galeria"
             />
+            */}
             
             {/*************Borrar despues******************/}
             <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -347,10 +348,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {<Button
+           {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />}
+           />*/}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -364,12 +365,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )}
+        )*/}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -548,6 +549,7 @@ class Photo extends Component {
 
 	submitToGoogle = async () => {
 		try {
+      console.log('Entra 1');
 			this.setState({ uploading: true,});
       let { image } = this.state;
       let { image64 } = this.state;
@@ -580,6 +582,7 @@ class Photo extends Component {
       //console.log(responseJson);
       //console.log(responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence);
       if(responseJson){
+        console.log('Entra 2');
         this.setState({
           googleResponse: responseJson,
           uploading: false,
@@ -588,13 +591,16 @@ class Photo extends Component {
           kilometersbegin: 0,
           kilometersend: 0
         });
+        console.log('Entra 3');
       }else{
         this.setState({local: true});
+        console.log('Entra 22');
       }
       this._changeShow()
       //console.log(this.state.googleResponse);
       //=====================TripCode=+++==========================
       if(this.state.start){
+        console.log('Entra 23');
         console.log('Numero aleatorio');
         var max = Math.round((new Date()));
         var min = Math.round((new Date()).getTime() / 1000);
@@ -607,16 +613,19 @@ class Photo extends Component {
       TripCodeV = this.state.TripCode;
       //=====================TripCode=+++==========================
       //=====================Coords================================
-      this._getLocationAsync()
-      let location = await Location.getCurrentPositionAsync({});
+      //this._getLocationAsync();
+      location = await this._getLocationAsync();
       this.setState({ location });
       if (this.state.errorMessage) {
         text = this.state.errorMessage;
+        console.log('Entra 24.1');
       } else if (this.state.location) {
+        console.log('Entra 24.2');
         this.state.lat = JSON.stringify(this.state.location.coords.latitude);
         this.baseState.lati = this.state.lat;
         this.state.long = JSON.stringify(this.state.location.coords.longitude);
         this.baseState.longi = this.state.long;
+        console.log('Entra 24.3');
       }
       //=====================Coords================================
       //=====================LOCATION==================================
@@ -625,12 +634,14 @@ class Photo extends Component {
       UbicationV = this.state.Ubication;
       this.baseState.lati = this.state.lat;
       this.baseState.longi = this.state.long;
+      console.log('Entra 25');
       //=====================Ubication==================================
 
       //=====================DATATIME================================
       this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
       console.log(this.state.data_time);
       data_timeV = this.state.data_time;
+      console.log('Entra 26');
       //=====================DATATIME================================
       //=====================Type=======================================
       // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
@@ -639,6 +650,7 @@ class Photo extends Component {
       // }
       // console.log(this.state.type)
       TypeV = this.state.Type;
+      console.log('Entra 27');
       //=====================Type=======================================
       //conf parametros para trabajar sin red
       // if(!responseJson)
@@ -650,11 +662,11 @@ class Photo extends Component {
       //     start: false,
       //   });
       // }
-
-
+      
       //=====================IF NETWOK==================================
       if (this.state.confidence < this.state.confidence_min){
           if(this.state.repeat == 0){
+            console.log('Entra 4');
             this.setState({ 
               repeat: 1,
               lat:'',
@@ -670,14 +682,16 @@ class Photo extends Component {
             this.setState({ repeat: 2,});
             repeatV = this.state.repeat;
             this.baseState.repeat = repeatV
+            console.log('Entra 5');
           } 
       }
 
-      console.log(this.state.confidence);
-      console.log(this.state.repeat);
+      console.log('los datos '+this.state.confidence);
+      console.log('los datos '+this.state.repeat);
 
         //this.setState(this.baseState);
-        if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
+       if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
+        console.log('Entra 6');
         //=====================Confidence===============================
         ConfidenceV = this.state.confidence;
         //=====================Confidence===============================
