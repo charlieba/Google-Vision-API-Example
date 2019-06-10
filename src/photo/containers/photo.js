@@ -17,7 +17,7 @@ import {
   SafeAreaView,
   Platform,
 } from 'react-native';
-import { ImagePicker,Constants, BarCodeScanner, Location, Permissions, SQLite } from 'expo';
+import { ImagePicker,Constants, Location, Permissions, SQLite } from 'expo';
 import uuid from 'uuid';
 import firebase from '../../../config/firebase';
 import Environment from '../../../config/environment';
@@ -27,8 +27,6 @@ const db = SQLite.openDatabase('db.db');
 
 class Photo extends Component {
 	state = {
-    //hasCameraPermission: 'granted', para leer qr
-    //lastScannedUrl: null, para leer qr
     image: null,
     image64: null,
 		uploading: false,
@@ -121,8 +119,6 @@ class Photo extends Component {
 		await Permissions.askAsync(Permissions.CAMERA_ROLL);
     await Permissions.askAsync(Permissions.CAMERA);
     
-    //this.update();
-
     //Create DB
     db.transaction(tx => {
       tx.executeSql(
@@ -138,25 +134,17 @@ class Photo extends Component {
     });    
 
     // Se crea un timer que ejecuta la sincronización con Firebase cada 4 mins.
-    this.interval = setInterval(
-      () => {
-        subirafirebase = submitToFirebase();
-        //GET no synchronized data
-        this._getNoSynchronized();
-      },
-      40000
-    );
+    // this.interval = setInterval(
+    //   () => {
+    //     subirafirebase = submitToFirebase();
+    //     //GET no synchronized data
+    //     this._getNoSynchronized();
+    //   },
+    //   40000
+    // );
 
   }
 
-  //Funcion de leer QR
-  // _handleBarCodeRead = result => {
-  //   if (result.data !== this.state.lastScannedUrl) {
-  //     LayoutAnimation.spring();
-  //     this.setState({ lastScannedUrl: result.data });
-  //     //console.log(this.state.lastScannedUrl);
-  //   }
-  // };
   
   _getLocationAsync = async () => {
     let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -227,26 +215,6 @@ class Photo extends Component {
 					contentContainerStyle={styles.contentContainer}
         >
 
-        {/*{this.state.hasCameraPermission === null
-          ? <Text>Requesting for camera permission</Text>
-          : this.state.hasCameraPermission === false
-              ? <Text style={{ color: '#fff' }}>
-                  Camera permission is not granted
-                </Text>
-              : <BarCodeScanner
-                  onBarCodeRead={this._handleBarCodeRead}
-                  style={{
-                    height: Dimensions.get('window').height,
-                    width: Dimensions.get('window').width,
-                  }}
-                />}
-
-        {this._maybeRenderUrl()}
-
-                <StatusBar hidden />
-
-        <Text style={styles.getStartedText}>{ this.state.lastScannedUrl }</Text>*/}
-
         { this.state.noSynchronized != 0 &&(     
           <Text style={styles.noSynchronized}>Tienes { this.state.noSynchronized } viajes pendientes de sincronizar</Text>
         )}
@@ -258,12 +226,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -330,12 +298,12 @@ class Photo extends Component {
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
             {/*************Borrar despues******************/}
-            {/*
+            {
             <Button
               onPress={this._pickImage}
               title="Elegir Imagen desde galeria"
             />
-            */}
+            }
             
             {/*************Borrar despues******************/}
             <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -348,10 +316,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -365,12 +333,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -488,10 +456,78 @@ class Photo extends Component {
 		});
 
     this._handleImagePicked(pickerResult);
-	};
+  };
+  
+  _getGeneralData = async () => {
+    this._changeShow()
+    //=====================TripCode=+++==========================
+    if(this.state.start){
+      console.log('Entra 23');
+      console.log('Numero aleatorio');
+      var max = Math.round((new Date()));
+      var min = Math.round((new Date()).getTime() / 1000);
+      var code = this._tripCode(max, min)
+      toStringV = code.toString();
+      this.setState({ TripCode: toStringV,});
+      console.log(this.state.TripCode);
+      console.log('Numero aleatorio');
+    }
+    TripCodeV = this.state.TripCode;
+    //=====================TripCode=+++==========================
+    //=====================Coords================================
+    //this._getLocationAsync();
+    location = await this._getLocationAsync();
+    this.setState({ location });
+    if (this.state.errorMessage) {
+      text = this.state.errorMessage;
+      console.log('Entra 24.1');
+    } else if (this.state.location) {
+      console.log('Entra 24.2');
+      this.state.lat = JSON.stringify(this.state.location.coords.latitude);
+      this.baseState.lati = this.state.lat;
+      this.state.long = JSON.stringify(this.state.location.coords.longitude);
+      this.baseState.longi = this.state.long;
+      console.log('Entra 24.3');
+    }
+    //=====================Coords================================
+    //=====================LOCATION==================================
+    this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
+    console.log(this.state.Ubication);
+    UbicationV = this.state.Ubication;
+    this.baseState.lati = this.state.lat;
+    this.baseState.longi = this.state.long;
+    console.log('Entra 25');
+    //=====================Ubication==================================
+
+    //=====================DATATIME================================
+    this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
+    console.log(this.state.data_time);
+    data_timeV = this.state.data_time;
+    console.log('Entra 26');
+    //=====================DATATIME================================
+    //=====================Type=======================================
+    // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
+    // {
+    //   this.state.type = 'end';
+    // }
+    // console.log(this.state.type)
+    TypeV = this.state.Type;
+    console.log('Entra 27');
+    //=====================Type=======================================
+    //conf parametros para trabajar sin red
+    // if(!responseJson)
+    // {
+    //   console.log('sin red');
+    //   this.setState({
+    //     image: picLocalV,
+    //     showData: true,
+    //     start: false,
+    //   });
+    // }
+  }
 
 	_handleImagePicked = async pickerResult => {
-    console.log('la url local')
+    //console.log('la url local')
     //console.log(pickerResult.base64);
     picResultV = pickerResult;
     this.setState({ 
@@ -499,9 +535,10 @@ class Photo extends Component {
       image:pickerResult.base64,
      });
     picLocalV = pickerResult.uri;
-    console.log(pickerResult.uri)
-    console.log('la url local')
+    //console.log(pickerResult.uri)
+    //console.log('la url local')
     
+    this._getGeneralData();
     this.submitToGoogle();
   };
  
@@ -578,9 +615,6 @@ class Photo extends Component {
 				}
 			);
       let responseJson = await response.json();
-      //let responseJson = null;
-      //console.log(responseJson);
-      //console.log(responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence);
       if(responseJson){
         console.log('Entra 2');
         this.setState({
@@ -596,73 +630,7 @@ class Photo extends Component {
         this.setState({local: true});
         console.log('Entra 22');
       }
-      this._changeShow()
-      //console.log(this.state.googleResponse);
-      //=====================TripCode=+++==========================
-      if(this.state.start){
-        console.log('Entra 23');
-        console.log('Numero aleatorio');
-        var max = Math.round((new Date()));
-        var min = Math.round((new Date()).getTime() / 1000);
-        var code = this._tripCode(max, min)
-        toStringV = code.toString();
-        this.setState({ TripCode: toStringV,});
-        console.log(this.state.TripCode);
-        console.log('Numero aleatorio');
-      }
-      TripCodeV = this.state.TripCode;
-      //=====================TripCode=+++==========================
-      //=====================Coords================================
-      //this._getLocationAsync();
-      location = await this._getLocationAsync();
-      this.setState({ location });
-      if (this.state.errorMessage) {
-        text = this.state.errorMessage;
-        console.log('Entra 24.1');
-      } else if (this.state.location) {
-        console.log('Entra 24.2');
-        this.state.lat = JSON.stringify(this.state.location.coords.latitude);
-        this.baseState.lati = this.state.lat;
-        this.state.long = JSON.stringify(this.state.location.coords.longitude);
-        this.baseState.longi = this.state.long;
-        console.log('Entra 24.3');
-      }
-      //=====================Coords================================
-      //=====================LOCATION==================================
-      this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
-      console.log(this.state.Ubication);
-      UbicationV = this.state.Ubication;
-      this.baseState.lati = this.state.lat;
-      this.baseState.longi = this.state.long;
-      console.log('Entra 25');
-      //=====================Ubication==================================
-
-      //=====================DATATIME================================
-      this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
-      console.log(this.state.data_time);
-      data_timeV = this.state.data_time;
-      console.log('Entra 26');
-      //=====================DATATIME================================
-      //=====================Type=======================================
-      // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
-      // {
-      //   this.state.type = 'end';
-      // }
-      // console.log(this.state.type)
-      TypeV = this.state.Type;
-      console.log('Entra 27');
-      //=====================Type=======================================
-      //conf parametros para trabajar sin red
-      // if(!responseJson)
-      // {
-      //   console.log('sin red');
-      //   this.setState({
-      //     image: picLocalV,
-      //     showData: true,
-      //     start: false,
-      //   });
-      // }
-      
+       
       //=====================IF NETWOK==================================
       if (this.state.confidence < this.state.confidence_min){
           if(this.state.repeat == 0){
@@ -685,11 +653,7 @@ class Photo extends Component {
             console.log('Entra 5');
           } 
       }
-
-      console.log('los datos '+this.state.confidence);
-      console.log('los datos '+this.state.repeat);
-
-        //this.setState(this.baseState);
+        //entrithis.setState(this.baseState);
        if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
         console.log('Entra 6');
         //=====================Confidence===============================
@@ -921,8 +885,6 @@ class Photo extends Component {
   };
 }
 
-
-
 async function uploadImageAsync(uri) {
 	const blob = await new Promise((resolve, reject) => {
 		const xhr = new XMLHttpRequest();
@@ -948,66 +910,6 @@ async function uploadImageAsync(uri) {
 
 	return await snapshot.ref.getDownloadURL();
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-    backgroundColor: '#fff',
-		paddingBottom: 10
-  },
-  noSynchronized:{
-    paddingTop: 45,
-    textAlign: 'center'
-  },
-	developmentModeText: {
-		marginBottom: 20,
-		color: 'rgba(0,0,0,0.4)',
-		fontSize: 14,
-		lineHeight: 19,
-		textAlign: 'center'
-	},
-	contentContainer: {
-		paddingTop: 30
-	},
-
-	getStartedContainer: {
-		alignItems: 'center',
-		marginHorizontal: 60
-	},
-
-	getStartedText: {
-    marginTop: '100%',
-		fontSize: 24,
-		color: 'rgba(96,100,109, 1)',
-		lineHeight: 24,
-		textAlign: 'center'
-	},
-
-	helpContainer: {
-		marginTop: 15,
-		alignItems: 'center'
-  },
-  
-  url: {
-    flex: 1,
-  },
-
-  urlText: {
-    color: '#fff',
-    fontSize: 20,
-  },
-
-  cancelButton: {
-    marginLeft: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  cancelButtonText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 18,
-  },
-});
 
 async function uploadToDatabase(
   TripCode,
@@ -1105,5 +1007,66 @@ async function submitToFirebase() {
     console.log(error);
   }
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+    backgroundColor: '#fff',
+		paddingBottom: 10
+  },
+  noSynchronized:{
+    paddingTop: 45,
+    textAlign: 'center'
+  },
+	developmentModeText: {
+		marginBottom: 20,
+		color: 'rgba(0,0,0,0.4)',
+		fontSize: 14,
+		lineHeight: 19,
+		textAlign: 'center'
+	},
+	contentContainer: {
+		paddingTop: 30
+	},
+
+	getStartedContainer: {
+		alignItems: 'center',
+		marginHorizontal: 60
+	},
+
+	getStartedText: {
+    marginTop: '100%',
+		fontSize: 24,
+		color: 'rgba(96,100,109, 1)',
+		lineHeight: 24,
+		textAlign: 'center'
+	},
+
+	helpContainer: {
+		marginTop: 15,
+		alignItems: 'center'
+  },
+  
+  url: {
+    flex: 1,
+  },
+
+  urlText: {
+    color: '#fff',
+    fontSize: 20,
+  },
+
+  cancelButton: {
+    marginLeft: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  cancelButtonText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 18,
+  },
+});
+
 
 export default Photo;
