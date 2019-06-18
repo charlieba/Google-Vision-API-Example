@@ -226,12 +226,12 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {image ? null : (
+            {/*image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )}
+            )*/}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
@@ -298,12 +298,12 @@ class Photo extends Component {
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
             {/*************Borrar despues******************/}
-            {
+            {/*
             <Button
               onPress={this._pickImage}
               title="Elegir Imagen desde galeria"
             />
-            }
+            /*}
             
             {/*************Borrar despues******************/}
             <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -316,10 +316,10 @@ class Photo extends Component {
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {<Button
+           {/*<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />}
+           />*/}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -333,12 +333,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )}
+        )*/}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -458,73 +458,73 @@ class Photo extends Component {
     this._handleImagePicked(pickerResult);
   };
   
-  _getGeneralData = async () => {
-    this._changeShow()
-    //=====================TripCode=+++==========================
-    if(this.state.start){
-      console.log('Entra 23');
-      console.log('Numero aleatorio');
-      var max = Math.round((new Date()));
-      var min = Math.round((new Date()).getTime() / 1000);
-      var code = this._tripCode(max, min)
-      toStringV = code.toString();
-      this.setState({ TripCode: toStringV,});
-      console.log(this.state.TripCode);
-      console.log('Numero aleatorio');
-    }
-    TripCodeV = this.state.TripCode;
-    //=====================TripCode=+++==========================
-    //=====================Coords================================
-    //this._getLocationAsync();
-    location = await this._getLocationAsync();
-    this.setState({ location });
-    if (this.state.errorMessage) {
-      text = this.state.errorMessage;
-      console.log('Entra 24.1');
-    } else if (this.state.location) {
-      console.log('Entra 24.2');
-      this.state.lat = JSON.stringify(this.state.location.coords.latitude);
-      this.baseState.lati = this.state.lat;
-      this.state.long = JSON.stringify(this.state.location.coords.longitude);
-      this.baseState.longi = this.state.long;
-      console.log('Entra 24.3');
-    }
-    //=====================Coords================================
-    //=====================LOCATION==================================
-    this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
-    console.log(this.state.Ubication);
-    UbicationV = this.state.Ubication;
-    this.baseState.lati = this.state.lat;
-    this.baseState.longi = this.state.long;
-    console.log('Entra 25');
-    //=====================Ubication==================================
+  // _getGeneralData = async () => {
+  //   this._changeShow()
+  //   //=====================TripCode=+++==========================
+  //   if(this.state.start){
+  //     console.log('Entra 23');
+  //     console.log('Numero aleatorio');
+  //     var max = Math.round((new Date()));
+  //     var min = Math.round((new Date()).getTime() / 1000);
+  //     var code = this._tripCode(max, min)
+  //     toStringV = code.toString();
+  //     this.setState({ TripCode: toStringV,});
+  //     console.log(this.state.TripCode);
+  //     console.log('Numero aleatorio');
+  //   }
+  //   TripCodeV = this.state.TripCode;
+  //   //=====================TripCode=+++==========================
+  //   //=====================Coords================================
+  //   //this._getLocationAsync();
+  //   location = await this._getLocationAsync();
+  //   this.setState({ location });
+  //   if (this.state.errorMessage) {
+  //     text = this.state.errorMessage;
+  //     console.log('Entra 24.1');
+  //   } else if (this.state.location) {
+  //     console.log('Entra 24.2');
+  //     this.state.lat = JSON.stringify(this.state.location.coords.latitude);
+  //     this.baseState.lati = this.state.lat;
+  //     this.state.long = JSON.stringify(this.state.location.coords.longitude);
+  //     this.baseState.longi = this.state.long;
+  //     console.log('Entra 24.3');
+  //   }
+  //   //=====================Coords================================
+  //   //=====================LOCATION==================================
+  //   this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
+  //   console.log(this.state.Ubication);
+  //   UbicationV = this.state.Ubication;
+  //   this.baseState.lati = this.state.lat;
+  //   this.baseState.longi = this.state.long;
+  //   console.log('Entra 25');
+  //   //=====================Ubication==================================
 
-    //=====================DATATIME================================
-    this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
-    console.log(this.state.data_time);
-    data_timeV = this.state.data_time;
-    console.log('Entra 26');
-    //=====================DATATIME================================
-    //=====================Type=======================================
-    // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
-    // {
-    //   this.state.type = 'end';
-    // }
-    // console.log(this.state.type)
-    TypeV = this.state.Type;
-    console.log('Entra 27');
-    //=====================Type=======================================
-    //conf parametros para trabajar sin red
-    // if(!responseJson)
-    // {
-    //   console.log('sin red');
-    //   this.setState({
-    //     image: picLocalV,
-    //     showData: true,
-    //     start: false,
-    //   });
-    // }
-  }
+  //   //=====================DATATIME================================
+  //   this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
+  //   console.log(this.state.data_time);
+  //   data_timeV = this.state.data_time;
+  //   console.log('Entra 26');
+  //   //=====================DATATIME================================
+  //   //=====================Type=======================================
+  //   // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
+  //   // {
+  //   //   this.state.type = 'end';
+  //   // }
+  //   // console.log(this.state.type)
+  //   TypeV = this.state.Type;
+  //   console.log('Entra 27');
+  //   //=====================Type=======================================
+  //   //conf parametros para trabajar sin red
+  //   // if(!responseJson)
+  //   // {
+  //   //   console.log('sin red');
+  //   //   this.setState({
+  //   //     image: picLocalV,
+  //   //     showData: true,
+  //   //     start: false,
+  //   //   });
+  //   // }
+  // }
 
 	_handleImagePicked = async pickerResult => {
     //console.log('la url local')
@@ -634,12 +634,30 @@ class Photo extends Component {
           //}
           this._changeShow()
         }catch (e){
-          this.setState(this.baseState);
+          if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+            this.setState({ repeatKMS: 1,});
+            this.baseState.repeatKMS = this.state.repeatKMS;
+          }else if(this.state.repeatKMS == 1){
+            this.setState({ repeatKMS: 2,});
+            this.baseState.repeatKMS = this.state.repeatKMS;
+          } 
         }
       }else{
-        this.setState(this.baseState);
+        //this.setState(this.baseState);
         console.log('No hayy respuesta');
+        this.baseState.repeatKMS = this.state.repeatKMS;
       }  
+
+
+      this.setState({ 
+        //repeatKMS: 1,
+        lat:'',
+        long:'',
+        Ubication:'',
+        date:'',
+        time:'',
+        data_time:'',
+      });
     //=====================TripCode=+++==========================
     if(this.state.start){
       console.log('Entra 23');
@@ -695,29 +713,29 @@ class Photo extends Component {
     console.log('Entra 27');
        
       //=====================IF NETWOK==================================
-      if (this.state.confidence < this.state.confidence_min){
-          if(this.state.repeat == 0){
-            console.log('Entra 4');
-            this.setState({ 
-              repeat: 1,
-              lat:'',
-              long:'',
-              Ubication:'',
-              date:'',
-              time:'',
-              data_time:'',
-            });
-            repeatV = this.state.repeat;
-            this.baseState.repeat = repeatV
-          }else if(this.state.repeat == 1){
-            this.setState({ repeat: 2,});
-            repeatV = this.state.repeat;
-            this.baseState.repeat = repeatV
-            console.log('Entra 5');
-          } 
-      }
+      // if (this.state.confidence < this.state.confidence_min){
+      //     if(this.state.repeat == 0){
+      //       console.log('Entra 4');
+      //       this.setState({ 
+      //         repeat: 1,
+      //         lat:'',
+      //         long:'',
+      //         Ubication:'',
+      //         date:'',
+      //         time:'',
+      //         data_time:'',
+      //       });
+      //       repeatV = this.state.repeat;
+      //       this.baseState.repeat = repeatV
+      //     }else if(this.state.repeat == 1){
+      //       this.setState({ repeat: 2,});
+      //       repeatV = this.state.repeat;
+      //       this.baseState.repeat = repeatV
+      //       console.log('Entra 5');
+      //     } 
+      // }
         //entrithis.setState(this.baseState);
-       if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
+       if(responseJson.responses[0].textAnnotations != undefined && !this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
 
         //=====================Confidence===============================
         ConfidenceV = this.state.confidence;
@@ -957,10 +975,23 @@ class Photo extends Component {
         this.setState({ Type: 'start',});
         //GET no synchronized data
         this._getNoSynchronized();
+      }else{
+        console.log('inicia de nuevo1');
+        this.setState({ 
+          repeatKMS: 1,
+          lat:'',
+          long:'',
+          Ubication:'',
+          date:'',
+          time:'',
+          data_time:'',
+        });
+        this.setState({uploading:false})
       }
       
 		} catch (error) {
-			console.log(error);
+      console.log('inicia de nuevo');
+      console.log(error);
     }
   };
 }
