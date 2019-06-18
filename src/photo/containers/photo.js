@@ -33,7 +33,7 @@ class Photo extends Component {
     googleResponse: null,
     TripCode: '',
     confidence: 0,
-    confidence_min: 0.2,
+    confidence_min: 0.1,
     date: '',
     time: '',
     data_time: '',
@@ -538,7 +538,7 @@ class Photo extends Component {
     //console.log(pickerResult.uri)
     //console.log('la url local')
     
-    this._getGeneralData();
+    //this._getGeneralData();
     this.submitToGoogle();
   };
  
@@ -615,21 +615,84 @@ class Photo extends Component {
 				}
 			);
       let responseJson = await response.json();
-      if(responseJson){
-        console.log('Entra 2');
-        this.setState({
-          googleResponse: responseJson,
-          uploading: false,
-          confidence: responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence,
-          array: responseJson.responses[0].textAnnotations,
-          kilometersbegin: 0,
-          kilometersend: 0
-        });
-        console.log('Entra 3');
+      if(responseJson.responses[0].textAnnotations != undefined){
+        try{
+          //if(responseJson){
+            console.log(responseJson);
+            console.log('Entra 2');
+            this.setState({
+              googleResponse: responseJson,
+              uploading: false,
+              confidence: responseJson.responses[0].fullTextAnnotation.pages[0].blocks[0].confidence,
+              array: responseJson.responses[0].textAnnotations,
+              kilometersbegin: 0,
+              kilometersend: 0
+            });
+          // }else{
+          //   this.setState({local: true});
+          //   console.log('Entra 22');
+          //}
+          this._changeShow()
+        }catch (e){
+          this.setState(this.baseState);
+        }
       }else{
-        this.setState({local: true});
-        console.log('Entra 22');
-      }
+        this.setState(this.baseState);
+        console.log('No hayy respuesta');
+      }  
+    //=====================TripCode=+++==========================
+    if(this.state.start){
+      console.log('Entra 23');
+      console.log('Numero aleatorio');
+      var max = Math.round((new Date()));
+      var min = Math.round((new Date()).getTime() / 1000);
+      var code = this._tripCode(max, min)
+      toStringV = code.toString();
+      this.setState({ TripCode: toStringV,});
+      console.log(this.state.TripCode);
+      console.log('Numero aleatorio');
+    }
+    TripCodeV = this.state.TripCode;
+    //=====================TripCode=+++==========================
+    //=====================Coords================================
+    //this._getLocationAsync();
+    location = await this._getLocationAsync();
+    this.setState({ location });
+    if (this.state.errorMessage) {
+      text = this.state.errorMessage;
+      console.log('Entra 24.1');
+    } else if (this.state.location) {
+      console.log('Entra 24.2');
+      this.state.lat = JSON.stringify(this.state.location.coords.latitude);
+      this.baseState.lati = this.state.lat;
+      this.state.long = JSON.stringify(this.state.location.coords.longitude);
+      this.baseState.longi = this.state.long;
+      console.log('Entra 24.3');
+    }
+    //=====================Coords================================
+    //=====================LOCATION==================================
+    this.state.Ubication = this.state.Ubication.concat(this.state.lat,', ', this.state.long)
+    console.log(this.state.Ubication);
+    UbicationV = this.state.Ubication;
+    this.baseState.lati = this.state.lat;
+    this.baseState.longi = this.state.long;
+    console.log('Entra 25');
+    //=====================Ubication==================================
+
+    //=====================DATATIME================================
+    this.state.data_time = this.state.data_time.concat(this.state.date,' ', this.state.time)
+    console.log(this.state.data_time);
+    data_timeV = this.state.data_time;
+    console.log('Entra 26');
+    //=====================DATATIME================================
+    //=====================Type=======================================
+    // if(this.state.confidence > 0 && this.state.confidence > this.state.confidence_min)
+    // {
+    //   this.state.type = 'end';
+    // }
+    // console.log(this.state.type)
+    TypeV = this.state.Type;
+    console.log('Entra 27');
        
       //=====================IF NETWOK==================================
       if (this.state.confidence < this.state.confidence_min){
@@ -655,7 +718,7 @@ class Photo extends Component {
       }
         //entrithis.setState(this.baseState);
        if(!this.state.local && this.state.repeat == 0 || this.state.repeat == 2){
-        console.log('Entra 6');
+
         //=====================Confidence===============================
         ConfidenceV = this.state.confidence;
         //=====================Confidence===============================
@@ -670,16 +733,18 @@ class Photo extends Component {
         text=text.replace(/,/g,"");
         text=text.replace(/ /g,'');
         text=text.replace(/\\/g,"");
-        //text=text.replace(/\n/g,",");
+        text=text.replace(/\n/g,"");
         text=text.replace(/o/g,"0");
         text=text.replace(/u/g,"0");
+
+        console.log("texto modificado: "+text);
 
         var text = text.substring(
           text.lastIndexOf("-0537") + 5, 
           text.lastIndexOf("kil0meters")
         );
         var textPlateAndKms = text;
-        
+        console.log("texto modificado2: "+text);
         for (let i =0; i < this.state.array.length; i++ ){
           arreglo.push(this.state.array[i].description);
         }
@@ -709,14 +774,22 @@ class Photo extends Component {
 
         //=====================KilometersOriginal========================
         //this.state.kms = arreglo[positionPlaca + 4]; 
-        var foo = '0';
+        var cero = '0';
         KilometersOriginalV = 0;
-        console.log("kilometers "+textPlateAndKms);
+        console.log("Lo primero "+textPlateAndKms);
         this.state.KilometersConfidence = 0.90;
         if(textPlateAndKms =='undefined' || textPlateAndKms == undefined) {
           this.baseState.Kilo = 0;
           //this.state.confidence = 0.10;
           this.state.KilometersConfidence = 0.10;
+          //repetir foto por que no hay kms registrado
+          if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+            this.setState({ repeatKMS: 1,});
+            this.baseState.repeatKMS = this.state.repeatKMS;
+          }else if(this.state.repeatKMS == 1){
+            this.setState({ repeatKMS: 2,});
+            this.baseState.repeatKMS = this.state.repeatKMS;
+          } 
         }else{
           KilometersOriginalV = textPlateAndKms;
           KilometersOriginalV=KilometersOriginalV.replace(/i/g,'1');
@@ -725,12 +798,13 @@ class Photo extends Component {
           KilometersOriginalV=KilometersOriginalV.replace(/a/g,'4');
           KilometersOriginalV=KilometersOriginalV.replace(/s/g,'5');
           KilometersOriginalV=KilometersOriginalV.replace(/b/g,'8');
+          KilometersOriginalV=KilometersOriginalV.replace(/d/g,'0');
 
           console.log("size2  "+KilometersOriginalV.length)
           //==============CUSTOM CONFIDENCE==========================
-          if (KilometersOriginalV.length == 8){
-            KilometersOriginalV = KilometersOriginalV.concat(KilometersOriginalV, foo)
-          }else if(KilometersOriginalV.length != 9)
+          if (KilometersOriginalV.length == 6){
+            KilometersOriginalV = KilometersOriginalV.concat(KilometersOriginalV, cero)
+          }else if(KilometersOriginalV.length != 7)
           {
             this.state.KilometersConfidence = 0.10;
             if(this.state.repeatKMS == 0 && this.state.repeat == 0){
@@ -742,33 +816,40 @@ class Photo extends Component {
             } 
             console.log(this.baseState.repeatKMS); 
             console.log('conf1'); 
-          }else if(KilometersOriginalV.length == 9) {
+          }
+          
+          if(KilometersOriginalV.length == 7) {
             this.state.KilometersConfidence = 0.90;
             this.setState({ repeatKMS: 0,});
             this.baseState.repeatKMS = this.state.repeatKMS;
+
+            try {
+              KilometersOriginalV = parseInt(KilometersOriginalV);
+              KilometersOriginalV = KilometersOriginalV / 10 ;
+                          
+            }
+            catch (e) {
+              this.state.KilometersConfidence = 0.10;
+              //repetir la foto
+              if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+                this.setState({ repeatKMS: 1,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              }else if(this.state.repeatKMS == 1){
+                this.setState({ repeatKMS: 2,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              } 
+              console.error(e.message);
+            }
+          }else{
+            if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+              this.setState({ repeatKMS: 1,});
+              this.baseState.repeatKMS = this.state.repeatKMS;
+            }else if(this.state.repeatKMS == 1){
+              this.setState({ repeatKMS: 2,});
+              this.baseState.repeatKMS = this.state.repeatKMS;
+            } 
           }
           //==============CUSTOMCONFIDENCE==========================
-          try {
-            KilometersOriginalV = parseInt(KilometersOriginalV);
-
-
-            if (typeof KilometersOriginalV != 'number'){
-
-              this.state.KilometersConfidence = 0.10;
-              KilometersConfidenceV = this.state.KilometersConfidence
-            }else if(isNaN(KilometersOriginalV)){
-              this.state.KilometersConfidence = 0.10;
-              KilometersConfidenceV = this.state.KilometersConfidence
-            }else if(KilometersOriginalV < 0 || KilometersOriginalV == 0){
-              KilometersOriginalV = parseInt(KilometersOriginalV);
-            }
-            console.log("confidence "+this.state.KilometersConfidence);            
-          }
-          catch (e) {
-            this.state.KilometersConfidence = 0.10;
-            console.error(e.message);
-          }
-          
             if(this.state.start){
               this.state.kilometersbegin = KilometersOriginalV
               this.baseState.startKilometer = this.state.kilometersbegin
@@ -832,7 +913,6 @@ class Photo extends Component {
         //     repeatV = this.state.repeat;
         //   } 
         // }
-
         this.setState(this.baseState);
         console.log('antes de insert');
         console.log(this.state.repeatKMS);
