@@ -226,18 +226,19 @@ class Photo extends Component {
               )}
             </View>
             {/*************Borrar despues******************/}
-            {/*image ? null : (
+            {image ? null : (
               <Button
                 onPress={this._pickImage}
                 title="Elegir Imagen desde galeria"
               />
-            )*/}
+            )}
              {/*************Borrar despues******************/}
             {image ? null : (
               <Button onPress={this._takePhoto} title="Iniciar viaje" />
             )}
             { this.state.repeatKMS != 1 && this.state.googleResponse && this.baseState.repeat != 1  && this.state.showData == false &&(     
               <View style={styles.getStartedContainer}>
+              <Text>Codigo del viaje: { this.state.TripCode }</Text>
                 <Text style={styles.getStartedText}>Gracias los valores de tu viaje han sido almacenados</Text>
                 {this.state.start &&( 
                   <Text>{this.baseState.Kilo} KMS</Text>
@@ -298,12 +299,12 @@ class Photo extends Component {
             <Text style={styles.getStartedText}>Podrias tomar nuevamente la foto</Text>
             <Text>Creemos que los datos no son correctos, ¿Puedes tomar nuevamente la foto?</Text>
             {/*************Borrar despues******************/}
-            {/*
+            {
             <Button
               onPress={this._pickImage}
               title="Elegir Imagen desde galeria"
             />
-            /*}
+            }
             
             {/*************Borrar despues******************/}
             <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -311,15 +312,16 @@ class Photo extends Component {
       )}
       {this.state.repeatKMS != 1 && this.baseState.repeat != 1 && this.state.showData == true && this.state.start == false && (  
         <View style={styles.getStartedContainer}>
+          <Text>Codigo del viaje: { this.state.TripCode }</Text>
           <Text style={styles.getStartedText}>Estos son los datos de tu Viaje</Text>
           <Text>KMS: {this.baseState.Kilo} </Text>
           <Text>LAT: {this.baseState.lati} </Text>
           <Text>LONG: {this.baseState.longi}</Text>
           {/*************Borrar despues******************/}
-           {/*<Button
+           {<Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
-           />*/}
+           />}
           {/*************Borrar despues******************/}
           <Button onPress={this._takePhoto} title="Finalizar Viaje" />
         </View>    
@@ -333,12 +335,12 @@ class Photo extends Component {
           </View>
         )}
         {/*************Borrar despues******************/}
-        {/*this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
+        {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button
             onPress={this._pickImage}
             title="Elegir Imagen desde galeria"
           />
-        )*/}
+        )}
         {/*************Borrar despues******************/}
         {this.state.confidence != 0 && this.state.confidence < this.state.confidence_min && this.baseState.repeat == 1 && (
           <Button onPress={this._takePhoto} title="Tomar Foto" />
@@ -937,6 +939,7 @@ class Photo extends Component {
         //console.log(repeatV);
         if(this.baseState.repeatKMS == 0 || this.baseState.repeatKMS == 2){
           subirafirebase = await uploadToDatabase(TripCodeV, data_timeV, TruckPlateV, TruckPlateOriginalV, TruckPlateConfidenceV, TruckPlateUntrustedV, KilometersV, KilometersOriginalV, KilometersConfidenceV, KilometersUntrustedV, UnitV, UbicationV, TypeV, LogoV, picURLV, addedByPhoneV,);
+          subiralog = await logTrip(TripCodeV, responseJson);
           this.setState({synchronized: 'true'})
           synchronizedV = this.state.synchronized;
           db.transaction(
@@ -1068,6 +1071,28 @@ async function uploadToDatabase(
     })
 
 }
+
+// LOG
+async function logTrip(
+  TripCode,
+  responseJson,
+  ) {
+      firebase.database().ref('Log/').push({
+        TripCode,
+        responseJson,
+    }).then((data)=>{
+        //success callback
+        console.log('data ' , data)
+        return data;
+    }).catch((error)=>{
+        //error callback
+        console.log('error ' , error)
+        return error;
+    })
+
+}
+
+// LOG
 
 /**
  * Función de sincronización
