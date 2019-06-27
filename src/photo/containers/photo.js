@@ -877,8 +877,32 @@ class Photo extends Component {
               this.state.kilometersend = KilometersOriginalV
               this.baseState.endKilometer = this.state.kilometersend
             }
-          this.baseState.Kilo = KilometersOriginalV;
-          KilometersConfidenceV = this.state.KilometersConfidence;
+
+            //Valida si kilimentros end es mayor a cero y si kilometros beggin es mayor repite la foto
+            if(this.baseState.endKilometer > 0 && this.baseState.startKilometer > this.baseState.endKilometer){
+              if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+                this.setState({ repeatKMS: 1,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              }else if(this.state.repeatKMS == 1){
+                this.setState({ repeatKMS: 2,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              } 
+            }else {
+              this.baseState.Kilo = KilometersOriginalV;
+              KilometersConfidenceV = this.state.KilometersConfidence;
+            }
+           //Valida si kilimentros end es mayor a cero y si kilometros beggin es mayor repite la foto
+            //Valida que el total de kms recorridos no sea mayor a 500kms
+            if((this.baseState.startKilometer + this.baseState.endKilometer) > 500){
+              if(this.state.repeatKMS == 0 && this.state.repeat == 0){
+                this.setState({ repeatKMS: 1,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              }else if(this.state.repeatKMS == 1){
+                this.setState({ repeatKMS: 2,});
+                this.baseState.repeatKMS = this.state.repeatKMS;
+              } 
+            }
+          
         }
         //=====================KilometersOriginal========================
         //=====================Kilometers================================
