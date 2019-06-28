@@ -201,6 +201,15 @@ class Photo extends Component {
     let synchronizedV;
     let repeatV;
     let temporalV;
+    let DateTimeCreatedV;
+    let DateTimeStartedV;
+    let DateTimeendedV;
+    let StatusV;
+    let TotalKilometersV;
+    let TruckPlateVR;
+    let id_pic_startV;
+    let id_pic_endV;
+    let id_tripV;
 
     //=====================DATA_TIME====================
     var today = new Date();
@@ -373,6 +382,8 @@ class Photo extends Component {
             let tempo1 = rows._array[0].Type;
             let kileterTemp = rows._array[0].KilometersOriginal;
             let tripCodeTemp = rows._array[0].TripCode;
+            let dateTimeTemp = rows._array[0].DataTime;
+            let TruckPlateTemp = rows._array[0].TruckPlate;
 
             //var temporalV = JSON.stringify(rows),
             //console.log(JSON.stringify(rows._array[0].Type))
@@ -392,8 +403,15 @@ class Photo extends Component {
                 image: 'foo',
                 Type: 'end',
               });
-              this.baseState.startKilometer = kileterTemp
-              this.baseState.Kilo = kileterTemp
+              this.baseState.startKilometer = parseFloat(kileterTemp).toFixed(2)
+              this.baseState.Kilo = parseFloat(kileterTemp).toFixed(2)
+              TypeV = 'end'
+              DateTimeCreatedV = dateTimeTemp
+              DateTimeStartedV = dateTimeTemp
+              TruckPlateVR = TruckPlateTemp
+              id_pic_startV = tripCodeTemp
+              id_tripV = tripCodeTemp
+
             }else{
               console.log('para iniciar');
               this.setState({
@@ -902,7 +920,11 @@ class Photo extends Component {
                 this.baseState.repeatKMS = this.state.repeatKMS;
               } 
             }
-          
+            //Esta variable se usa para el resumen del viaje en la funcion tripTable
+            var kilo1 = parseFloat(this.baseState.startKilometer)
+            var kilo2 = parseFloat(this.baseState.endKilometer)
+            var kilo3 = kilo1 + kilo2
+            TotalKilometersV = kilo3       
         }
         //=====================KilometersOriginal========================
         //=====================Kilometers================================
@@ -974,6 +996,27 @@ class Photo extends Component {
               );
             },
           );
+          //Sube data a la table viejes (trip resumen)
+          if(TypeV === 'start'){
+            DateTimeCreatedV = data_timeV;
+            DateTimeStartedV = data_timeV;
+            TruckPlateVR = TruckPlateOriginalV;
+            id_pic_startV = TripCodeV;
+            id_tripV = TripCodeV;
+          }else{
+            StatusV = 'closed';
+            DateTimeendedV = data_timeV;
+            //TotalKilometersV = KilometersOriginalV;
+            id_pic_endV = TripCodeV;
+          }
+          
+          if(TypeV === 'end'){
+            subirtrip = await tripTable(DateTimeCreatedV, DateTimeStartedV, DateTimeendedV, StatusV, TotalKilometersV, TruckPlateVR, id_pic_startV, id_pic_endV, id_tripV,);
+          }
+
+          //Sube data a la table viejes (trip resumen)
+
+
           this.setState({ 
             repeat: 0,
             repeatKMS: 0,
@@ -1115,8 +1158,43 @@ async function logTrip(
     })
 
 }
-
 // LOG
+
+// Trip_table
+async function tripTable(
+  DateTimeCreated,
+  DateTimeStarted,
+  DateTimeended,
+  Status,
+  TotalKilometers,
+  TruckPlate,
+  id_pic_start,
+  id_pic_end,
+  id_trip,
+  ) {
+      firebase.database().ref('viajes/').push({
+        DateTimeCreated,
+        DateTimeStarted,
+        DateTimeended,
+        Status,
+        TotalKilometers,
+        TruckPlate,
+        id_pic_start,
+        id_pic_end,
+        id_trip,
+    }).then((data)=>{
+        //success callback
+        console.log('data ' , data)
+        return data;
+    }).catch((error)=>{
+        //error callback
+        console.log('error ' , error)
+        return error;
+    })
+
+}
+
+// Trip_table
 
 /**
  * Función de sincronización
